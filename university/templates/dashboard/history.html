@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>История показаний — {{ room.name }}</h2>
+    <div class="actions">
+        <a class="btn btn-secondary" href="{% url 'university:room_detail' room.id %}">Назад в кабинет</a>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 20px;">
+    <table>
+        <thead>
+            <tr>
+                <th>Датчик</th>
+                <th>Тип</th>
+                <th>Значение</th>
+                <th>Время</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in history %}
+                <tr>
+                    <td>{{ item.sensor.name }}</td>
+                    <td>{{ item.sensor.sensor_type.name }}</td>
+                    <td>{{ item.value }}</td>
+                    <td>{{ item.created_at|date:"d.m.Y H:i:s" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">История пуста.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

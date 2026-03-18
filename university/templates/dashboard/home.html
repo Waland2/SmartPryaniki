@@ -1,0 +1,53 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="grid">
+    <div class="card">
+        <h3>Кабинеты</h3>
+        <div style="font-size: 32px; font-weight: 700;">{{ total_rooms }}</div>
+    </div>
+    <div class="card">
+        <h3>Всего датчиков</h3>
+        <div style="font-size: 32px; font-weight: 700;">{{ total_sensors }}</div>
+    </div>
+    <div class="card">
+        <h3>Активные</h3>
+        <div style="font-size: 32px; font-weight: 700;" class="status-active">{{ active_sensors }}</div>
+    </div>
+    <div class="card">
+        <h3>С ошибкой</h3>
+        <div style="font-size: 32px; font-weight: 700;" class="status-error">{{ error_sensors }}</div>
+    </div>
+</div>
+
+<div style="margin-top: 24px;" class="room-grid">
+    {% for room in rooms %}
+        <div class="card">
+            <h2>{{ room.name }}</h2>
+            <div class="muted">Этаж {{ room.floor }}</div>
+
+            <div class="room-meta">
+                <div class="pill">Стулья: {{ room.chairs }}</div>
+                <div class="pill">Парты: {{ room.desks }}</div>
+                <div class="pill">ПК: {{ room.computers }}</div>
+                <div class="pill">Окна: {{ room.windows }}</div>
+            </div>
+
+            <div style="margin-top: 14px;">
+                <strong>Датчики:</strong> {{ room.sensor_set.count }}
+            </div>
+
+            <div class="actions">
+                <a class="btn" href="{% url 'university:room_detail' room.id %}">Открыть кабинет</a>
+                <a class="btn btn-secondary" href="{% url 'university:room_simulate' room.id %}">Симулировать</a>
+            </div>
+        </div>
+    {% empty %}
+        <div class="card">
+            <h3>Кабинеты не найдены</h3>
+            <p class="muted">Сначала добавь кабинеты в админке.</p>
+            <a class="btn" href="/admin/university/room/">Перейти в админку</a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

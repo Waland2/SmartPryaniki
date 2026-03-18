@@ -1,0 +1,85 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>{{ room.name }}</h2>
+    <p class="muted">Этаж {{ room.floor }}</p>
+    <p>{{ room.description }}</p>
+
+    <div class="actions">
+        <a class="btn" href="{% url 'university:room_simulate' room.id %}">Запустить симуляцию</a>
+        <a class="btn btn-secondary" href="{% url 'university:room_history' room.id %}">История показаний</a>
+        <a class="btn btn-secondary" href="/admin/university/room/{{ room.id }}/change/">Редактировать кабинет</a>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 20px;">
+    <h2>Датчики кабинета</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Тип</th>
+                <th>Статус</th>
+                <th>Последнее значение</th>
+                <th>Обновлено</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sensor in sensors %}
+                <tr>
+                    <td>{{ sensor.name }}</td>
+                    <td>{{ sensor.sensor_type.name }}</td>
+                    <td>
+                        {% if sensor.status == "active" %}
+                            <span class="status-active">Работает</span>
+                        {% elif sensor.status == "error" %}
+                            <span class="status-error">Ошибка</span>
+                        {% else %}
+                            <span class="status-disabled">Выключен</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ sensor.last_value|default:"—" }}</td>
+                    <td>{{ sensor.last_updated|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        <a href="/admin/university/sensor/{{ sensor.id }}/change/">Изменить</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">У этого кабинета пока нет датчиков.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card" style="margin-top: 20px;">
+    <h2>Последние показания</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Датчик</th>
+                <th>Значение</th>
+                <th>Время</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in latest_data %}
+                <tr>
+                    <td>{{ item.sensor.name }}</td>
+                    <td>{{ item.value }}</td>
+                    <td>{{ item.created_at|date:"d.m.Y H:i:s" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">История пока пустая.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

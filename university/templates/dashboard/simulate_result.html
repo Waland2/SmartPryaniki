@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>Симуляция для кабинета: {{ room.name }}</h2>
+    <div class="actions">
+        <a class="btn btn-secondary" href="{% url 'university:room_detail' room.id %}">Назад в кабинет</a>
+        <a class="btn" href="{% url 'university:room_history' room.id %}">Открыть историю</a>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 20px;">
+    <table>
+        <thead>
+            <tr>
+                <th>Датчик</th>
+                <th>Тип</th>
+                <th>Значение</th>
+                <th>Результат</th>
+                <th>Сообщение</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in results %}
+                <tr>
+                    <td>{{ item.sensor.name }}</td>
+                    <td>{{ item.sensor.sensor_type.name }}</td>
+                    <td>{{ item.value|default:"—" }}</td>
+                    <td>
+                        {% if item.saved %}
+                            <span class="status-active">Сохранено</span>
+                        {% else %}
+                            <span class="status-disabled">Не сохранено</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.message }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">Нет результатов.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
