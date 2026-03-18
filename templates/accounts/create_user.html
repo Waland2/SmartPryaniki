@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание пользователя</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #222;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 540px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 28px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            margin: 0 0 24px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cfd6df;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #3b82f6;
+        }
+
+        .btn {
+            margin-top: 8px;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 16px;
+            font-size: 15px;
+            font-weight: 700;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .message {
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .message.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .result {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #eff6ff;
+            color: #1e3a8a;
+            font-size: 14px;
+        }
+
+        .actions {
+            margin-top: 18px;
+            font-size: 14px;
+        }
+
+        .actions a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .actions a:hover {
+            text-decoration: underline;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-weight: 400;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="card">
+            <h1>Создать пользователя</h1>
+            <p class="subtitle">Логин будет создан автоматически по ФИО</p>
+
+            {% if error %}
+                <div class="message error">{{ error }}</div>
+            {% endif %}
+
+            {% if success %}
+                <div class="message success">{{ success }}</div>
+            {% endif %}
+
+            {% if created_username %}
+                <div class="result">
+                    Созданный логин: <strong>{{ created_username }}</strong>
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div>
+                    <label for="last_name">Фамилия</label>
+                    <input id="last_name" name="last_name" type="text" placeholder="Иванов" required>
+                </div>
+
+                <div>
+                    <label for="first_name">Имя</label>
+                    <input id="first_name" name="first_name" type="text" placeholder="Иван" required>
+                </div>
+
+                <div>
+                    <label for="middle_name">Отчество</label>
+                    <input id="middle_name" name="middle_name" type="text" placeholder="Иванович">
+                </div>
+
+                <div>
+                    <label for="password">Пароль</label>
+                    <input id="password" name="password" type="password" placeholder="Введите пароль" required>
+
+                    <label for="show-password" class="checkbox-label">
+                        <input type="checkbox" id="show-password">
+                        <span>Показать пароль</span>
+                    </label>
+                </div>
+
+                <div>
+                    <label for="role">Роль</label>
+                    <select id="role" name="role">
+                        <option value="teacher">Преподаватель</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn">Создать пользователя</button>
+            </form>
+
+            <div class="actions">
+                <a href="/dashboard/">← Вернуться в кабинет</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const passwordInput = document.getElementById("password");
+        const showPasswordCheckbox = document.getElementById("show-password");
+
+        if (passwordInput && showPasswordCheckbox) {
+            showPasswordCheckbox.addEventListener("change", function () {
+                passwordInput.type = this.checked ? "text" : "password";
+            });
+        }
+    </script>
+</body>
+</html>
