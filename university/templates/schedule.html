@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Расписание</title>
+
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background: #eef2f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        /* 🔍 Форма */
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        input, select {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            min-width: 200px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background: #4f46e5;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #4338ca;
+        }
+
+        /* 📅 Дни */
+        .day {
+            margin-top: 25px;
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .day.today {
+            border: 2px solid #4f46e5;
+        }
+
+        .day h2 {
+            margin-bottom: 10px;
+            color: #374151;
+        }
+
+        /* 📚 Пары */
+        .pair {
+            margin-top: 15px;
+        }
+
+        .pair-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #6b7280;
+        }
+
+        .lesson {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: 0.2s;
+        }
+
+        .lesson:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .subject {
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .meta {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .warning {
+            text-align: center;
+            margin-top: 20px;
+            color: red;
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            margin-top: 30px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📅 Расписание</h1>
+
+<form method="get" class="filters">
+    <input type="text" name="group" placeholder="Группа (241-362)" value="{{ group|default:'' }}">
+    <input type="text" name="teacher" placeholder="ФИО преподавателя" value="{{ teacher|default:'' }}">
+    <input type="date" name="date_from" value="{{ date_from }}">
+    <input type="date" name="date_to" value="{{ date_to }}">
+    <select name="day">
+        <option value="">Все дни</option>
+        <option value="monday">Понедельник</option>
+        <option value="tuesday">Вторник</option>
+        <option value="wednesday">Среда</option>
+        <option value="thursday">Четверг</option>
+        <option value="friday">Пятница</option>
+        <option value="saturday">Суббота</option>
+    </select>
+
+    <button type="submit">Поиск</button>
+</form>
+
+{% if warning %}
+    <div class="warning">⚠ {{ warning }}</div>
+{% endif %}
+
+{% if schedule %}
+
+    {% for day, lessons in schedule.items %}
+
+        <div class="day {% if day == today %}today{% endif %}">
+
+            <h2>
+                {% if day == "monday" %}Понедельник
+                {% elif day == "tuesday" %}Вторник
+                {% elif day == "wednesday" %}Среда
+                {% elif day == "thursday" %}Четверг
+                {% elif day == "friday" %}Пятница
+                {% elif day == "saturday" %}Суббота
+                {% else %}{{ day }}
+                {% endif %}
+            </h2>
+
+            {% for number, pairs in lessons.items %}
+                {% if pairs %}
+                    <div class="pair">
+                        <div class="pair-number">Пара {{ number }}</div>
+
+                        {% for pair in pairs %}
+                            <div class="lesson">
+                                <div class="subject">
+                                    {{ pair.subject.name }} ({{ pair.subject_type.type }})
+                                </div>
+
+                                <div class="meta">
+                                    📍 {{ pair.location.name }}
+                                </div>
+
+                                <div class="meta">
+                                    👨‍🏫
+                                    {% for teacher in pair.teachers %}
+                                        {{ teacher.full_name }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </div>
+
+                                <div class="meta">
+                                    🚪
+                                    {% for room in pair.rooms %}
+                                        {{ room.number }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </div>
+
+                                <div class="meta">
+                                    📅 {{ pair.start_date }} — {{ pair.end_date }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+        </div>
+
+    {% endfor %}
+
+{% else %}
+    {% if group or teacher %}
+        <div class="empty">
+            ❌ Ничего не найдено<br><br>
+
+            {% if group %}
+                📚 Группа: <b>{{ group }}</b><br>
+            {% endif %}
+
+            {% if teacher %}
+                👨‍🏫 Преподаватель: <b>{{ teacher }}</b>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="empty">
+            Введите данные для поиска
+        </div>
+    {% endif %}
+{% endif %}
+
+</div>
+
+</body>
+</html>
