@@ -1,10 +1,28 @@
-from django.contrib.admin.views.decorators import staff_member_required
+import datetime
+
 from django.shortcuts import get_object_or_404, redirect, render
 
+from accounts.decorators import moderator_or_admin_required
 from .models import Room, SensorData
+from api_client import APIClient
 
 
-@staff_member_required
+def index_redirect(request):
+    if not request.user.is_authenticated:
+        return redirect("/accounts/login/")
+
+    if request.user.is_superuser:
+        return redirect("/dashboard/")
+
+    profile = getattr(request.user, "profile", None)
+
+    if profile and profile.role == "moderator":
+        return redirect("/dashboard/")
+
+    return redirect("/schedule/")
+
+
+@moderator_or_admin_required
 def dashboard_home(request):
     rooms = Room.objects.prefetch_related("sensor_set__sensor_type").all()
 
@@ -24,7 +42,7 @@ def dashboard_home(request):
     return render(request, "dashboard/home.html", context)
 
 
-@staff_member_required
+@moderator_or_admin_required
 def room_detail(request, room_id):
     room = get_object_or_404(
         Room.objects.prefetch_related("sensor_set__sensor_type"),
@@ -43,7 +61,7 @@ def room_detail(request, room_id):
     return render(request, "dashboard/room_detail.html", context)
 
 
-@staff_member_required
+@moderator_or_admin_required
 def room_simulate(request, room_id):
     room = get_object_or_404(
         Room.objects.prefetch_related("sensor_set__sensor_type"),
@@ -63,7 +81,7 @@ def room_simulate(request, room_id):
     )
 
 
-@staff_member_required
+@moderator_or_admin_required
 def room_history(request, room_id):
     room = get_object_or_404(Room, pk=room_id)
     history = (
@@ -78,97 +96,6 @@ def room_history(request, room_id):
         "title": f"История показаний: {room.name}",
     }
     return render(request, "dashboard/history.html", context)
-
-from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import get_object_or_404, redirect, render
-
-from .models import Room, SensorData
-
-
-@staff_member_required
-def dashboard_home(request):
-    rooms = Room.objects.prefetch_related("sensor_set__sensor_type").all()
-
-    total_rooms = rooms.count()
-    total_sensors = sum(room.sensor_set.count() for room in rooms)
-    active_sensors = sum(room.sensor_set.filter(status="active").count() for room in rooms)
-    error_sensors = sum(room.sensor_set.filter(status="error").count() for room in rooms)
-
-    context = {
-        "rooms": rooms,
-        "total_rooms": total_rooms,
-        "total_sensors": total_sensors,
-        "active_sensors": active_sensors,
-        "error_sensors": error_sensors,
-        "title": "Панель администратора",
-    }
-    return render(request, "dashboard/home.html", context)
-
-
-@staff_member_required
-def room_detail(request, room_id):
-    room = get_object_or_404(
-        Room.objects.prefetch_related("sensor_set__sensor_type"),
-        pk=room_id,
-    )
-
-    sensors = room.sensor_set.all()
-    latest_data = SensorData.objects.filter(sensor__room=room).select_related("sensor")[:20]
-
-    context = {
-        "room": room,
-        "sensors": sensors,
-        "latest_data": latest_data,
-        "title": f"Кабинет: {room.name}",
-    }
-    return render(request, "dashboard/room_detail.html", context)
-
-
-@staff_member_required
-def room_simulate(request, room_id):
-    room = get_object_or_404(
-        Room.objects.prefetch_related("sensor_set__sensor_type"),
-        pk=room_id,
-    )
-
-    results = room.simulate_sensors()
-
-    return render(
-        request,
-        "dashboard/simulate_result.html",
-        {
-            "room": room,
-            "results": results,
-            "title": f"Симуляция: {room.name}",
-        },
-    )
-
-
-@staff_member_required
-def room_history(request, room_id):
-    room = get_object_or_404(Room, pk=room_id)
-    history = (
-        SensorData.objects.filter(sensor__room=room)
-        .select_related("sensor", "sensor__sensor_type")
-        .order_by("-created_at")[:100]
-    )
-
-    context = {
-        "room": room,
-        "history": history,
-        "title": f"История показаний: {room.name}",
-    }
-    return render(request, "dashboard/history.html", context)
-
-from api_client import APIClient
-
-
-from api_client import APIClient
-from django.shortcuts import render
-import datetime
-
-
-import datetime
 
 
 def schedule_view(request):
@@ -197,13 +124,11 @@ def schedule_view(request):
     if data:
         schedule = data.get("result")
 
-        # если пусто
         if not schedule or all(v is None for v in schedule.values()):
             schedule = None
             warning = "Ничего не найдено по заданным параметрам"
 
-        # 🔥 фильтр группа + преподаватель
-        if teacher and group:
+        if teacher and group and schedule:
             filtered_schedule = {}
 
             for day, lessons in schedule.items():
@@ -230,8 +155,7 @@ def schedule_view(request):
             if not schedule:
                 warning = "У этого преподавателя нет занятий с данной группой"
 
-        # 🔥 ФИЛЬТР ПО ДАТАМ
-        if date_from or date_to:
+        if (date_from or date_to) and schedule:
             filtered_schedule = {}
 
             for day, lessons in schedule.items():
@@ -271,7 +195,6 @@ def schedule_view(request):
 
             schedule = filtered_schedule
 
-        # 🔥 фильтр по дню
         if selected_day and schedule:
             schedule = {selected_day: schedule.get(selected_day)}
 

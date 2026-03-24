@@ -1,7 +1,20 @@
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
+from django.utils.crypto import get_random_string
 
-from .services import create_teacher
+from .services import create_user_with_role
+
+
+def redirect_user_by_role(user):
+    if user.is_superuser:
+        return "/dashboard/"
+
+    profile = getattr(user, "profile", None)
+
+    if profile and profile.role == "moderator":
+        return "/dashboard/"
+
+    return "/schedule/"
 
 
 def login_view(request):
@@ -15,7 +28,7 @@ def login_view(request):
 
         if user:
             login(request, user)
-            return redirect("/dashboard/")
+            return redirect(redirect_user_by_role(user))
         else:
             error = "Неверный логин или пароль"
 
@@ -28,12 +41,16 @@ def logout_view(request):
 
 
 def create_user_view(request):
-    if not request.user.is_superuser:
+    if not request.user.is_authenticated:
         return redirect("/accounts/login/")
+
+    if not request.user.is_superuser:
+        return redirect("/schedule/")
 
     error = ""
     success = ""
     created_username = ""
+    created_password = ""
 
     if request.method == "POST":
         first_name = request.POST.get("first_name", "").strip()
@@ -42,10 +59,17 @@ def create_user_view(request):
         password = request.POST.get("password", "").strip()
         role = request.POST.get("role", "teacher").strip()
 
-        if not first_name or not last_name or not password:
-            error = "Заполните имя, фамилию и пароль"
+        generate_password = request.POST.get("generate_password") == "on"
+
+        if generate_password:
+            password = get_random_string(12)
+
+        if not first_name or not last_name:
+            error = "Заполните имя и фамилию"
+        elif not password:
+            error = "Введите пароль или включите генерацию случайного пароля"
         else:
-            user = create_teacher(
+            user = create_user_with_role(
                 first_name=first_name,
                 last_name=last_name,
                 middle_name=middle_name,
@@ -53,7 +77,8 @@ def create_user_view(request):
                 role=role,
             )
             success = "Пользователь успешно создан"
-            created_username = user.username
+            created_username = user.profile.login
+            created_password = password
 
     return render(
         request,
@@ -62,5 +87,7 @@ def create_user_view(request):
             "error": error,
             "success": success,
             "created_username": created_username,
+            "created_password": created_password,
+            "title": "Создать пользователя",
         },
     )

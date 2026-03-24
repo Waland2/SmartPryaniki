@@ -1,219 +1,104 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Создание пользователя</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+{% extends "dashboard/base.html" %}
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            color: #222;
-        }
+{% block content %}
+<div class="card" style="max-width: 760px;">
+    <h2 style="margin-bottom: 8px;">Создать пользователя</h2>
+    <p class="muted" style="margin-top: 0;">Логин будет создан автоматически по ФИО</p>
 
-        .page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-        }
+    {% if error %}
+    <div
+        style="margin: 16px 0; padding: 12px 14px; border-radius: 10px; background: rgba(255, 107, 107, 0.12); color: #ff8a8a; border: 1px solid rgba(255, 107, 107, 0.35);">
+        {{ error }}
+    </div>
+    {% endif %}
 
-        .card {
-            width: 100%;
-            max-width: 540px;
-            background: white;
-            border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            padding: 28px;
-        }
+    {% if success %}
+    <div
+        style="margin: 16px 0; padding: 12px 14px; border-radius: 10px; background: rgba(56, 193, 114, 0.12); color: #7ee2a8; border: 1px solid rgba(56, 193, 114, 0.35);">
+        {{ success }}
+    </div>
+    {% endif %}
 
-        h1 {
-            margin: 0 0 8px;
-            font-size: 28px;
-        }
+    {% if created_username or created_password %}
+    <div
+        style="margin: 16px 0; padding: 12px 14px; border-radius: 10px; background: rgba(90, 169, 255, 0.12); color: #9fd0ff; border: 1px solid rgba(90, 169, 255, 0.35);">
+        {% if created_username %}
+        <div>Созданный логин: <strong>{{ created_username }}</strong></div>
+        {% endif %}
+        {% if created_password %}
+        <div style="margin-top: 8px;">Созданный пароль: <strong>{{ created_password }}</strong></div>
+        {% endif %}
+    </div>
+    {% endif %}
 
-        .subtitle {
-            margin: 0 0 24px;
-            color: #666;
-            font-size: 14px;
-        }
+    <form method="post" style="margin-top: 20px;">
+        {% csrf_token %}
 
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+                <label for="last_name" style="display:block; margin-bottom:8px; color: var(--muted);">Фамилия</label>
+                <input id="last_name" name="last_name" type="text" placeholder="Иванов" required
+                    style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--card-2); color: var(--text);">
+            </div>
 
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 14px;
-            font-weight: 600;
-        }
+            <div>
+                <label for="first_name" style="display:block; margin-bottom:8px; color: var(--muted);">Имя</label>
+                <input id="first_name" name="first_name" type="text" placeholder="Иван" required
+                    style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--card-2); color: var(--text);">
+            </div>
 
-        input,
-        select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #cfd6df;
-            border-radius: 10px;
-            font-size: 15px;
-            outline: none;
-        }
+            <div style="grid-column: 1 / -1;">
+                <label for="middle_name" style="display:block; margin-bottom:8px; color: var(--muted);">Отчество</label>
+                <input id="middle_name" name="middle_name" type="text" placeholder="Иванович"
+                    style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--card-2); color: var(--text);">
+            </div>
 
-        input:focus,
-        select:focus {
-            border-color: #3b82f6;
-        }
+            <div>
+                <label for="password" style="display:block; margin-bottom:8px; color: var(--muted);">Пароль</label>
+                <input id="password" name="password" type="text" placeholder="Введите пароль"
+                    style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--card-2); color: var(--text);">
+            </div>
 
-        .btn {
-            margin-top: 8px;
-            border: none;
-            border-radius: 10px;
-            padding: 13px 16px;
-            font-size: 15px;
-            font-weight: 700;
-            background: #2563eb;
-            color: white;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background: #1d4ed8;
-        }
-
-        .message {
-            padding: 12px 14px;
-            border-radius: 10px;
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-
-        .message.error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .message.success {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .result {
-            margin-top: 14px;
-            padding: 12px 14px;
-            border-radius: 10px;
-            background: #eff6ff;
-            color: #1e3a8a;
-            font-size: 14px;
-        }
-
-        .actions {
-            margin-top: 18px;
-            font-size: 14px;
-        }
-
-        .actions a {
-            color: #2563eb;
-            text-decoration: none;
-        }
-
-        .actions a:hover {
-            text-decoration: underline;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 8px;
-            font-weight: 400;
-        }
-
-        .checkbox-label input[type="checkbox"] {
-            width: auto;
-            margin: 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="page">
-        <div class="card">
-            <h1>Создать пользователя</h1>
-            <p class="subtitle">Логин будет создан автоматически по ФИО</p>
-
-            {% if error %}
-                <div class="message error">{{ error }}</div>
-            {% endif %}
-
-            {% if success %}
-                <div class="message success">{{ success }}</div>
-            {% endif %}
-
-            {% if created_username %}
-                <div class="result">
-                    Созданный логин: <strong>{{ created_username }}</strong>
-                </div>
-            {% endif %}
-
-            <form method="post">
-                {% csrf_token %}
-
-                <div>
-                    <label for="last_name">Фамилия</label>
-                    <input id="last_name" name="last_name" type="text" placeholder="Иванов" required>
-                </div>
-
-                <div>
-                    <label for="first_name">Имя</label>
-                    <input id="first_name" name="first_name" type="text" placeholder="Иван" required>
-                </div>
-
-                <div>
-                    <label for="middle_name">Отчество</label>
-                    <input id="middle_name" name="middle_name" type="text" placeholder="Иванович">
-                </div>
-
-                <div>
-                    <label for="password">Пароль</label>
-                    <input id="password" name="password" type="password" placeholder="Введите пароль" required>
-
-                    <label for="show-password" class="checkbox-label">
-                        <input type="checkbox" id="show-password">
-                        <span>Показать пароль</span>
-                    </label>
-                </div>
-
-                <div>
-                    <label for="role">Роль</label>
-                    <select id="role" name="role">
-                        <option value="teacher">Преподаватель</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="btn">Создать пользователя</button>
-            </form>
-
-            <div class="actions">
-                <a href="/dashboard/">← Вернуться в кабинет</a>
+            <div>
+                <label for="role" style="display:block; margin-bottom:8px; color: var(--muted);">Роль</label>
+                <select id="role" name="role"
+                    style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--card-2); color: var(--text);">
+                    <option value="teacher">Преподаватель</option>
+                    <option value="moderator">Младший администратор</option>
+                </select>
             </div>
         </div>
-    </div>
 
-    <script>
-        const passwordInput = document.getElementById("password");
-        const showPasswordCheckbox = document.getElementById("show-password");
+        <label for="generate-password"
+            style="display:flex; align-items:center; gap:10px; margin-top:16px; color: var(--muted); cursor:pointer;">
+            <input type="checkbox" id="generate-password" name="generate_password">
+            <span>Сгенерировать случайный пароль</span>
+        </label>
 
-        if (passwordInput && showPasswordCheckbox) {
-            showPasswordCheckbox.addEventListener("change", function () {
-                passwordInput.type = this.checked ? "text" : "password";
-            });
+        <div class="actions" style="margin-top: 20px;">
+            <button type="submit" class="btn">Создать пользователя</button>
+            <a href="{% url 'university:dashboard_home' %}" class="btn btn-secondary">Назад в кабинет</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    const passwordInput = document.getElementById("password");
+    const generatePasswordCheckbox = document.getElementById("generate-password");
+
+    if (passwordInput && generatePasswordCheckbox) {
+        function togglePasswordField() {
+            passwordInput.disabled = generatePasswordCheckbox.checked;
+            passwordInput.placeholder = generatePasswordCheckbox.checked
+                ? "Пароль будет сгенерирован автоматически"
+                : "Введите пароль";
+            if (generatePasswordCheckbox.checked) {
+                passwordInput.value = "";
+            }
         }
-    </script>
-</body>
-</html>
+
+        generatePasswordCheckbox.addEventListener("change", togglePasswordField);
+        togglePasswordField();
+    }
+</script>
+{% endblock %}
