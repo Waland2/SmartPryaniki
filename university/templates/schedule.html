@@ -11,6 +11,116 @@
             padding: 0;
         }
 
+        .header {
+            background: white;
+            border-bottom: 1px solid #dbe3ee;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav a,
+        .nav span {
+            color: #4b5563;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .nav a:hover {
+            background: #f3f6fb;
+            color: #111827;
+        }
+
+        .nav .active {
+            background: #e9efff;
+            color: #4338ca;
+            font-weight: 600;
+        }
+
+        .user-menu {
+            position: relative;
+            display: inline-block;
+            padding-bottom: 10px;
+            margin-bottom: -10px;
+        }
+
+        .user-trigger {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: #374151;
+            text-decoration: none;
+            background: transparent;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .user-trigger:hover {
+            background: #f3f6fb;
+        }
+
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            min-width: 160px;
+            background: white;
+            border: 1px solid #dbe3ee;
+            border-radius: 10px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+            padding: 8px;
+        }
+
+        .user-menu:hover .user-dropdown {
+            display: block;
+        }
+
+        .user-dropdown a {
+            display: block;
+            text-decoration: none;
+            color: #b91c1c;
+            padding: 10px 12px;
+            border-radius: 8px;
+        }
+
+        .user-dropdown a:hover {
+            background: #fef2f2;
+        }
+
         .container {
             max-width: 1100px;
             margin: 40px auto;
@@ -22,7 +132,6 @@
             color: #2c3e50;
         }
 
-        /* 🔍 Форма */
         .filters {
             background: white;
             padding: 20px;
@@ -55,7 +164,6 @@
             background: #4338ca;
         }
 
-        /* 📅 Дни */
         .day {
             margin-top: 25px;
             background: white;
@@ -73,15 +181,20 @@
             color: #374151;
         }
 
-        /* 📚 Пары */
         .pair {
             margin-top: 15px;
         }
 
         .pair-number {
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
+            color: #374151;
+        }
+
+        .pair-time {
             color: #6b7280;
+            font-weight: 500;
+            margin-left: 8px;
         }
 
         .lesson {
@@ -100,6 +213,7 @@
         .subject {
             font-weight: bold;
             color: #111827;
+            margin-bottom: 8px;
         }
 
         .meta {
@@ -125,6 +239,40 @@
 
 <body>
 
+<header class="header">
+    <div class="header-inner">
+        <div class="header-left">
+            <a href="/schedule/" class="brand">Умные Пряники</a>
+
+            <nav class="nav">
+                <a href="/schedule/" class="active">Расписание</a>
+            </nav>
+        </div>
+
+        <div>
+            {% if request.user.is_authenticated %}
+                <div class="user-menu">
+                    <span class="user-trigger">
+                        {% if request.user.profile and request.user.profile.login %}
+                            {{ request.user.profile.login }}
+                        {% else %}
+                            {{ request.user.username }}
+                        {% endif %}
+                    </span>
+
+                    <div class="user-dropdown">
+                        <a href="/accounts/logout/">Выйти</a>
+                    </div>
+                </div>
+            {% else %}
+                <nav class="nav">
+                    <a href="/accounts/login/">Вход</a>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
 <div class="container">
 
 <h1>📅 Расписание</h1>
@@ -136,15 +284,15 @@
     <input type="date" name="date_to" value="{{ date_to }}">
     <select name="day">
         <option value="">Все дни</option>
-        <option value="monday">Понедельник</option>
-        <option value="tuesday">Вторник</option>
-        <option value="wednesday">Среда</option>
-        <option value="thursday">Четверг</option>
-        <option value="friday">Пятница</option>
-        <option value="saturday">Суббота</option>
+        <option value="monday" {% if selected_day == "monday" %}selected{% endif %}>Понедельник</option>
+        <option value="tuesday" {% if selected_day == "tuesday" %}selected{% endif %}>Вторник</option>
+        <option value="wednesday" {% if selected_day == "wednesday" %}selected{% endif %}>Среда</option>
+        <option value="thursday" {% if selected_day == "thursday" %}selected{% endif %}>Четверг</option>
+        <option value="friday" {% if selected_day == "friday" %}selected{% endif %}>Пятница</option>
+        <option value="saturday" {% if selected_day == "saturday" %}selected{% endif %}>Суббота</option>
     </select>
 
-    <button type="submit">Поиск</button>
+    <button type="submit">Найти</button>
 </form>
 
 {% if warning %}
@@ -153,61 +301,62 @@
 
 {% if schedule %}
 
-    {% for day, lessons in schedule.items %}
-
-        <div class="day {% if day == today %}today{% endif %}">
-
+    {% for day in schedule %}
+        <div class="day {% if day.key == today %}today{% endif %}">
             <h2>
-                {% if day == "monday" %}Понедельник
-                {% elif day == "tuesday" %}Вторник
-                {% elif day == "wednesday" %}Среда
-                {% elif day == "thursday" %}Четверг
-                {% elif day == "friday" %}Пятница
-                {% elif day == "saturday" %}Суббота
-                {% else %}{{ day }}
+                {% if day.key == "monday" %}Понедельник
+                {% elif day.key == "tuesday" %}Вторник
+                {% elif day.key == "wednesday" %}Среда
+                {% elif day.key == "thursday" %}Четверг
+                {% elif day.key == "friday" %}Пятница
+                {% elif day.key == "saturday" %}Суббота
+                {% else %}{{ day.key }}
                 {% endif %}
             </h2>
 
-            {% for number, pairs in lessons.items %}
-                {% if pairs %}
-                    <div class="pair">
-                        <div class="pair-number">Пара {{ number }}</div>
+            {% for pair_block in day.pairs %}
+                <div class="pair">
+                    <div class="pair-number">
+                        Пара {{ pair_block.number }}
+                        {% if pair_block.time %}
+                            <span class="pair-time">{{ pair_block.time }}</span>
+                        {% endif %}
+                    </div>
 
-                        {% for pair in pairs %}
-                            <div class="lesson">
-                                <div class="subject">
-                                    {{ pair.subject.name }} ({{ pair.subject_type.type }})
-                                </div>
+                    {% for pair in pair_block.items %}
+                        <div class="lesson">
+                            <div class="subject">
+                                {{ pair.subject_name }} ({{ pair.subject_type }})
+                            </div>
 
-                                <div class="meta">
-                                    📍 {{ pair.location.name }}
-                                </div>
+                            <div class="meta">
+                                👨‍🏫
+                                {% for teacher in pair.teachers %}
+                                    {{ teacher.full_name }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </div>
 
-                                <div class="meta">
-                                    👨‍🏫
-                                    {% for teacher in pair.teachers %}
-                                        {{ teacher.full_name }}{% if not forloop.last %}, {% endif %}
-                                    {% endfor %}
-                                </div>
+                            <div class="meta">
+                                📍 {{ pair.location_name }}
+                            </div>
 
+                            {% if pair.show_rooms %}
                                 <div class="meta">
                                     🚪
                                     {% for room in pair.rooms %}
                                         {{ room.number }}{% if not forloop.last %}, {% endif %}
                                     {% endfor %}
                                 </div>
+                            {% endif %}
 
-                                <div class="meta">
-                                    📅 {{ pair.start_date }} — {{ pair.end_date }}
-                                </div>
+                            <div class="meta">
+                                📅 {{ pair.date_range }}
                             </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
             {% endfor %}
-
         </div>
-
     {% endfor %}
 
 {% else %}
