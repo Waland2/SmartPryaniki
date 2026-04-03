@@ -19,3 +19,21 @@ def moderator_or_admin_required(view_func):
         return redirect("/schedule/")
 
     return _wrapped_view
+
+
+def teacher_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect("/accounts/login/")
+
+        if request.user.is_superuser:
+            return redirect("/dashboard/")
+
+        profile = getattr(request.user, "profile", None)
+        if profile and profile.role == "teacher":
+            return view_func(request, *args, **kwargs)
+
+        return redirect("/dashboard/")
+
+    return _wrapped_view

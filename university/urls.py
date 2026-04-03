@@ -10,4 +10,6 @@ urlpatterns = [
     path("dashboard/room/<int:room_id>/simulate/", views.room_simulate, name="room_simulate"),
     path("dashboard/room/<int:room_id>/history/", views.room_history, name="room_history"),
     path("schedule/", views.schedule_view, name="schedule"),
+    path("rooms/", views.rooms_view, name="rooms"),
+    path("current-day/", views.current_day_view, name="current_day"),
 ]

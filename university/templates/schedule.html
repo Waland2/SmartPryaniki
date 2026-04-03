@@ -141,16 +141,17 @@
             flex-wrap: wrap;
             justify-content: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 16px;
         }
 
         input, select {
             padding: 10px;
             border-radius: 8px;
             border: 1px solid #ddd;
-            min-width: 200px;
+            min-width: 180px;
         }
 
-        button {
+        button, .button-link {
             padding: 10px 20px;
             border: none;
             background: #4f46e5;
@@ -158,9 +159,13 @@
             border-radius: 8px;
             cursor: pointer;
             transition: 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        button:hover {
+        button:hover, .button-link:hover {
             background: #4338ca;
         }
 
@@ -222,6 +227,12 @@
             margin-top: 5px;
         }
 
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
         .warning {
             text-align: center;
             margin-top: 20px;
@@ -246,6 +257,10 @@
 
             <nav class="nav">
                 <a href="/schedule/" class="active">Расписание</a>
+                {% if request.user.is_authenticated and request.user.profile.role == "teacher" %}
+                    <a href="/current-day/">Текущий день</a>
+                    <a href="/rooms/">Кабинеты</a>
+                {% endif %}
             </nav>
         </div>
 
@@ -278,6 +293,7 @@
 <h1>📅 Расписание</h1>
 
 <form method="get" class="filters">
+    <input type="date" name="date" value="{{ selected_date }}">
     <input type="text" name="group" placeholder="Группа (241-362)" value="{{ group|default:'' }}">
     <input type="text" name="teacher" placeholder="ФИО преподавателя" value="{{ teacher|default:'' }}">
     <input type="date" name="date_from" value="{{ date_from }}">
@@ -295,6 +311,12 @@
     <button type="submit">Найти</button>
 </form>
 
+{% if request.user.is_authenticated and request.user.profile.role == "teacher" %}
+    <div class="toolbar">
+        <a href="/current-day/?date={{ selected_date|default:'' }}" class="button-link">Открыть страницу текущего дня</a>
+    </div>
+{% endif %}
+
 {% if warning %}
     <div class="warning">⚠ {{ warning }}</div>
 {% endif %}
@@ -303,16 +325,7 @@
 
     {% for day in schedule %}
         <div class="day {% if day.key == today %}today{% endif %}">
-            <h2>
-                {% if day.key == "monday" %}Понедельник
-                {% elif day.key == "tuesday" %}Вторник
-                {% elif day.key == "wednesday" %}Среда
-                {% elif day.key == "thursday" %}Четверг
-                {% elif day.key == "friday" %}Пятница
-                {% elif day.key == "saturday" %}Суббота
-                {% else %}{{ day.key }}
-                {% endif %}
-            </h2>
+            <h2>{{ day.label }}</h2>
 
             {% for pair_block in day.pairs %}
                 <div class="pair">
@@ -360,7 +373,7 @@
     {% endfor %}
 
 {% else %}
-    {% if group or teacher %}
+    {% if group or teacher or selected_date %}
         <div class="empty">
             ❌ Ничего не найдено<br><br>
 
@@ -369,7 +382,11 @@
             {% endif %}
 
             {% if teacher %}
-                👨‍🏫 Преподаватель: <b>{{ teacher }}</b>
+                👨‍🏫 Преподаватель: <b>{{ teacher }}</b><br>
+            {% endif %}
+
+            {% if selected_date %}
+                📅 Дата: <b>{{ selected_date }}</b>
             {% endif %}
         </div>
     {% else %}
