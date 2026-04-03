@@ -231,6 +231,8 @@
             display: flex;
             justify-content: center;
             margin-bottom: 10px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .warning {
@@ -260,6 +262,7 @@
                 {% if request.user.is_authenticated and request.user.profile.role == "teacher" %}
                     <a href="/current-day/">Текущий день</a>
                     <a href="/rooms/">Кабинеты</a>
+                    <a href="/notifications/">Уведомления</a>
                 {% endif %}
             </nav>
         </div>
@@ -314,6 +317,7 @@
 {% if request.user.is_authenticated and request.user.profile.role == "teacher" %}
     <div class="toolbar">
         <a href="/current-day/?date={{ selected_date|default:'' }}" class="button-link">Открыть страницу текущего дня</a>
+        <a href="/notifications/" class="button-link">Открыть уведомления</a>
     </div>
 {% endif %}
 
@@ -398,5 +402,6 @@
 
 </div>
 
+{% include "includes/notifications_popup.html" %}
 </body>
 </html>

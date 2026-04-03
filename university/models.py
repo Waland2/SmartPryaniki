@@ -123,3 +123,104 @@ class SensorData(models.Model):
         verbose_name = "Показание датчика"
         verbose_name_plural = "Показания датчиков"
         ordering = ('-created_at',)
+
+from django.conf import settings
+from django.utils import timezone
+
+
+class TeacherNotification(models.Model):
+    TYPE_CHOICES = [
+        ("environment_setup", "Настройка среды"),
+        ("preparation", "Подготовка кабинета"),
+    ]
+
+    STATUS_CHOICES = [
+        ("unread", "Не прочитано"),
+        ("read", "Прочитано"),
+        ("dismissed", "Скрыто"),
+    ]
+
+    ACTION_CHOICES = [
+        ("pending", "Не выбрано"),
+        ("manual", "Настрою сам"),
+        ("algorithm", "Оставить алгоритму"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="teacher_notifications",
+        verbose_name="Пользователь",
+    )
+    notification_type = models.CharField(
+        "Тип уведомления",
+        max_length=32,
+        choices=TYPE_CHOICES,
+        default="environment_setup",
+    )
+    title = models.CharField("Заголовок", max_length=255)
+    message = models.TextField("Сообщение")
+
+    lesson_date = models.DateField("Дата занятия")
+    lesson_number = models.CharField("Номер пары", max_length=8, blank=True)
+    room_name = models.CharField("Кабинет", max_length=64, blank=True)
+    subject_name = models.CharField("Предмет", max_length=255, blank=True)
+    group_name = models.CharField("Группа", max_length=64, blank=True)
+
+    recommended_temperature = models.DecimalField(
+        "Рекомендуемая температура",
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+    )
+    temperature_min = models.DecimalField(
+        "Минимальная температура",
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+    )
+    temperature_max = models.DecimalField(
+        "Максимальная температура",
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+    )
+
+    action_choice = models.CharField(
+        "Выбор преподавателя",
+        max_length=16,
+        choices=ACTION_CHOICES,
+        default="pending",
+    )
+    payload = models.JSONField("Дополнительные данные", default=dict, blank=True)
+
+    status = models.CharField("Статус", max_length=16, choices=STATUS_CHOICES, default="unread")
+    show_popup = models.BooleanField("Показывать popup", default=True)
+
+    valid_from = models.DateTimeField("Показывать с")
+    valid_until = models.DateTimeField("Показывать до")
+
+    created_at = models.DateTimeField("Создано", auto_now_add=True)
+    read_at = models.DateTimeField("Прочитано", null=True, blank=True)
+    action_at = models.DateTimeField("Выбор сделан", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Уведомление преподавателя"
+        verbose_name_plural = "Уведомления преподавателей"
+        ordering = ["-valid_from", "-created_at"]
+        indexes = [
+            models.Index(fields=["user", "status"]),
+            models.Index(fields=["lesson_date", "lesson_number"]),
+            models.Index(fields=["valid_from", "valid_until"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user} · {self.title}"
+
+    @property
+    def is_actual(self):
+        now = timezone.now()
+        return self.valid_from <= now <= self.valid_until

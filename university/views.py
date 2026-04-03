@@ -206,37 +206,8 @@ def parse_date_safe(value):
     return datetime.datetime.strptime(value, "%Y-%m-%d").date()
 
 
-def _get_rooms_catalog():
-    cache_key = "rooms_catalog_v2"
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-
-    rooms = list(Room.objects.all().order_by("name").prefetch_related("sensor_set__sensor_type"))
-    normalized_map = {}
-    available_rooms = []
-    seen = set()
-
-    for room in rooms:
-        canonical = canonical_room_name(room.name)
-        normalized = normalize_room(canonical)
-        if not normalized:
-            continue
-
-        if normalized not in normalized_map:
-            normalized_map[normalized] = room
-
-        if normalized not in seen:
-            seen.add(normalized)
-            available_rooms.append(canonical)
-
-    data = {
-        "rooms": rooms,
-        "normalized_map": normalized_map,
-        "available_rooms": available_rooms,
-    }
-    cache.set(cache_key, data, ROOMS_CACHE_TTL)
-    return data
+def _is_bad_api_response(data):
+    return (not data) or (isinstance(data, dict) and data.get("success") is False) or not (data.get("result") if isinstance(data, dict) else None)
 
 
 def _get_schedule_by_teacher_cached(teacher_name):
@@ -253,6 +224,32 @@ def _get_schedule_by_teacher_cached(teacher_name):
     try:
         data = api.get_schedule_by_teacher(teacher_name)
     except Exception:
+        data = None
+
+    if _is_bad_api_response(data):
+        data = None
+
+    cache.set(cache_key, data, SCHEDULE_CACHE_TTL)
+    return data
+
+
+def _get_schedule_by_group_cached(group_name):
+    group_name = (group_name or "").strip()
+    if not group_name:
+        return None
+
+    cache_key = f"group_schedule::{group_name}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    api = APIClient()
+    try:
+        data = api.get_schedule(group_name)
+    except Exception:
+        data = None
+
+    if _is_bad_api_response(data):
         data = None
 
     cache.set(cache_key, data, SCHEDULE_CACHE_TTL)
@@ -392,6 +389,39 @@ def build_room_info(room_value):
     }
 
 
+def _get_rooms_catalog():
+    cache_key = "rooms_catalog_v2"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    rooms = list(Room.objects.all().order_by("name").prefetch_related("sensor_set__sensor_type"))
+    normalized_map = {}
+    available_rooms = []
+    seen = set()
+
+    for room in rooms:
+        canonical = canonical_room_name(room.name)
+        normalized = normalize_room(canonical)
+        if not normalized:
+            continue
+
+        if normalized not in normalized_map:
+            normalized_map[normalized] = room
+
+        if normalized not in seen:
+            seen.add(normalized)
+            available_rooms.append(canonical)
+
+    data = {
+        "rooms": rooms,
+        "normalized_map": normalized_map,
+        "available_rooms": available_rooms,
+    }
+    cache.set(cache_key, data, ROOMS_CACHE_TTL)
+    return data
+
+
 def get_all_teacher_names():
     cache_key = "teacher_names::all"
     cached = cache.get(cache_key)
@@ -409,6 +439,81 @@ def get_all_teacher_names():
     return names
 
 
+def get_all_group_names_from_known_teachers():
+    cache_key = "known_group_names_from_teachers_v1"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    groups = set()
+
+    for teacher_name in get_all_teacher_names():
+        data = _get_schedule_by_teacher_cached(teacher_name)
+        if not data:
+            continue
+
+        schedule = data.get("result") or {}
+        for day_schedule in schedule.values():
+            if not day_schedule:
+                continue
+
+            for pairs in day_schedule.values():
+                for pair in pairs or []:
+                    group_data = pair.get("group") or {}
+                    group_number = (group_data.get("number") or "").strip()
+                    if group_number:
+                        groups.add(group_number)
+
+    groups = sorted(groups)
+    cache.set(cache_key, groups, ROOMS_CACHE_TTL)
+    return groups
+
+
+def get_lessons_for_group_on_date(group_name, selected_date):
+    data = _get_schedule_by_group_cached(group_name)
+    if not data:
+        return []
+
+    schedule = data.get("result") or {}
+    day_key = DAY_KEYS[selected_date.weekday()]
+    day_schedule = schedule.get(day_key) or {}
+    result = []
+
+    for number, pairs in day_schedule.items():
+        for pair in pairs or []:
+            try:
+                start_date = parse_date_safe(pair["start_date"])
+                end_date = parse_date_safe(pair["end_date"])
+            except Exception:
+                continue
+
+            if not (start_date <= selected_date <= end_date):
+                continue
+
+            rooms = pair.get("rooms") or []
+            room_number = ""
+            if rooms:
+                room_number = (rooms[0].get("number") or "").strip()
+
+            teachers = pair.get("teachers") or []
+            teacher_display = "—"
+            if teachers:
+                teacher_display = (teachers[0].get("full_name") or "").strip() or "—"
+
+            result.append({
+                "lesson_number": str(number),
+                "start_time": PAIR_TIMES.get(str(number), "").split("-")[0] if PAIR_TIMES.get(str(number)) else "",
+                "end_time": PAIR_TIMES.get(str(number), "").split("-")[1] if PAIR_TIMES.get(str(number)) else "",
+                "subject": ((pair.get("subject") or {}).get("name") or "").strip(),
+                "room": room_number,
+                "group": group_name,
+                "teacher": teacher_display,
+            })
+
+    result.sort(key=lambda item: (item.get("lesson_number", ""), item.get("start_time", "")))
+    return result
+
+
 def _build_room_schedule_index(selected_date):
     date_key = selected_date.strftime("%Y-%m-%d")
     cache_key = f"room_schedule_index::{date_key}"
@@ -418,10 +523,11 @@ def _build_room_schedule_index(selected_date):
 
     room_lessons_map = {}
     occupied_by_pair = {str(number): {} for number in PAIR_TIMES.keys()}
-    teacher_names = get_all_teacher_names()
+    group_names = get_all_group_names_from_known_teachers()
 
-    for teacher_name in teacher_names:
-        lessons = get_lessons_for_teacher_on_date(teacher_name, selected_date)
+    for group_name in group_names:
+        lessons = get_lessons_for_group_on_date(group_name, selected_date)
+
         for lesson in lessons:
             normalized_room = normalize_room(lesson.get("room"))
             if not normalized_room:
@@ -459,7 +565,7 @@ def _build_room_schedule_index(selected_date):
     result = {
         "room_lessons_map": final_room_lessons_map,
         "occupied_by_pair": occupied_by_pair,
-        "teacher_count": len(teacher_names),
+        "group_count": len(group_names),
     }
     cache.set(cache_key, result, ROOM_INDEX_CACHE_TTL)
     return result
@@ -514,7 +620,7 @@ def get_room_busy_state(room_value, selected_date, pair_number):
             "is_known": True,
         }
 
-    if index.get("teacher_count", 0) == 0:
+    if index.get("group_count", 0) == 0:
         return {
             "is_busy": False,
             "matched": None,
@@ -673,10 +779,16 @@ def schedule_view(request):
     api = APIClient()
     data = None
 
-    if teacher:
-        data = _get_schedule_by_teacher_cached(teacher)
-    elif group:
-        data = api.get_schedule(group)
+    try:
+        if teacher:
+            data = _get_schedule_by_teacher_cached(teacher)
+        elif group:
+            data = api.get_schedule(group)
+            if _is_bad_api_response(data):
+                data = None
+    except Exception:
+        data = None
+        warning = "Не удалось получить расписание из API"
 
     if data:
         schedule = data.get("result")
@@ -1020,8 +1132,6 @@ def rooms_view(request):
     warning = None
     if show_free_rooms and not selected_pair:
         warning = "Чтобы показать свободные кабинеты, выберите номер пары."
-    elif not get_all_teacher_names():
-        warning = "В локальной БД нет преподавателей. Проверка занятости кабинетов недоступна."
 
     context = {
         "selected_date": selected_date_str,
