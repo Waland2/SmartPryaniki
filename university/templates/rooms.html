@@ -105,7 +105,6 @@
         h1, h2 { margin: 0; }
         h1 { font-size: clamp(38px, 5vw, 58px); line-height: 1.02; }
         h2 { font-size: 28px; }
-        .subtitle { margin-top: 16px; max-width: 740px; color: var(--muted); font-size: 18px; line-height: 1.65; }
 
         .filters {
             display: grid;
@@ -113,6 +112,13 @@
             gap: 14px;
             align-items: end;
             margin-top: 24px;
+        }
+
+        .actions-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 14px;
         }
 
         label { display:block; margin-bottom:8px; color:var(--muted); font-size:14px; font-weight:700; }
@@ -132,6 +138,20 @@
             font-weight: 800;
             cursor: pointer;
             box-shadow: 0 10px 24px rgba(79, 70, 229, 0.22);
+        }
+
+        .secondary-button {
+            background: #ffffff;
+            color: var(--accent);
+            border: 1px solid rgba(79, 70, 229, 0.25);
+            box-shadow: none;
+            width: auto;
+            min-width: 220px;
+        }
+
+        .primary-button {
+            width: auto;
+            min-width: 220px;
         }
 
         .chips { display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; }
@@ -159,8 +179,8 @@
             padding: 20px;
             transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
         }
-        .slot-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08); border-color: rgba(200,169,107,0.6); }
-        .slot-card.active { background: linear-gradient(180deg, #eef2ff, #e9efff); border-color: rgba(200,169,107,0.9); }
+        .slot-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08); border-color: rgba(79,70,229,0.45); }
+        .slot-card.active { background: linear-gradient(180deg, #eef2ff, #e9efff); border-color: rgba(79,70,229,0.75); }
         .slot-card.selected { outline: 2px solid rgba(15, 118, 110, 0.42); }
         .slot-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
         .slot-title { font-size:21px; font-weight:800; }
@@ -168,7 +188,7 @@
         .badges { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
         .badge { padding:8px 12px; border-radius:999px; font-size:13px; font-weight:700; }
         .badge-blue { background:#e0e7ff; color:#3730a3; }
-        .badge-gold { background:#e0e7ff; color:#3730a3; }
+        .badge-gold { background:#ede9fe; color:#5b21b6; }
         .badge-gray { background:#e5e7eb; color:#374151; }
 
         .sidebar-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px; }
@@ -187,6 +207,8 @@
 
         @media (max-width: 1100px) {
             .hero, .content, .filters { grid-template-columns: 1fr; }
+            .actions-row { flex-direction: column; }
+            .primary-button, .secondary-button { width: 100%; }
         }
         @media (max-width: 640px) {
             .header-inner, .page { padding-left:16px; padding-right:16px; }
@@ -222,39 +244,51 @@
             </div>
 
             <div>
-                <form method="get" class="filters">
-                    <div>
-                        <label>Дата</label>
-                        <input type="date" name="date" value="{{ selected_date }}">
+                <form method="get">
+                    <div class="filters">
+                        <div>
+                            <label>Дата</label>
+                            <input type="date" name="date" value="{{ selected_date }}">
+                        </div>
+                        <div>
+                            <label>Кабинет</label>
+                            <input type="text" name="room" placeholder="Например: 1315 или Пр1315" value="{% if show_free_rooms %}{% else %}{{ selected_room }}{% endif %}" list="rooms-list">
+                            <datalist id="rooms-list">
+                                {% for room_name in available_rooms %}
+                                    <option value="{{ room_name }}"></option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                        <div>
+                            <label>Номер пары</label>
+                            <select name="pair">
+                                <option value="">Выберите пару</option>
+                                {% for pair_number, pair_time in pair_times.items %}
+                                    <option value="{{ pair_number }}" {% if pair_number == selected_pair %}selected{% endif %}>
+                                        {{ pair_number }} пара · {{ pair_time }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <button type="submit" class="primary-button">Показать кабинет</button>
+                        </div>
                     </div>
-                    <div>
-                        <label>Кабинет</label>
-                        <select name="room">
-                            {% for room_name in available_rooms %}
-                                <option value="{{ room_name }}" {% if room_name == selected_room %}selected{% endif %}>{{ room_name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label>Номер пары</label>
-                        <select name="pair">
-                            {% for slot in room_timeline %}
-                                <option value="{{ slot.pair_number }}" {% if slot.is_selected %}selected{% endif %}>{{ slot.pair_number }} пара · {{ slot.time }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <button type="submit">Показать кабинет</button>
+
+                    <div class="actions-row">
+                        <button type="submit" name="show_free_rooms" value="1" class="secondary-button">Свободные кабинеты</button>
                     </div>
                 </form>
 
                 <div class="chips">
                     <div class="chip">День: {{ selected_day_label }}</div>
-                    <div class="chip">Кабинет: {{ selected_room|default:"—" }}</div>
+                    <div class="chip">Кабинет: {% if show_free_rooms %}—{% else %}{{ selected_room|default:"—" }}{% endif %}</div>
                     <div class="chip">Выбрана пара: {{ selected_pair_number|default:"—" }}</div>
                 </div>
 
-                {% if warning %}
+                {% if show_free_rooms and selected_pair %}
+                    <div class="warning">Занятость кабинетов считается только по преподавателям, которые есть в локальной БД. Если преподавателя нет в БД, кабинет может ошибочно отображаться свободным.</div>
+                {% elif warning %}
                     <div class="warning">{{ warning }}</div>
                 {% endif %}
             </div>
@@ -286,26 +320,54 @@
 
     <section class="content">
         <div class="card">
-            <h2>Занятость кабинета в течение дня</h2>
+            {% if show_free_rooms and selected_pair %}
+                <h2>Свободные кабинеты</h2>
+                <div class="notes">Выберите кабинет из списка слева — его данные сразу отобразятся справа.</div>
 
-            <div class="timeline">
-                {% for slot in room_timeline %}
-                    <a class="slot-link" href="?date={{ selected_date }}&room={{ selected_room|urlencode }}&pair={{ slot.pair_number }}">
-                        <div class="slot-card{% if slot.is_active %} active{% endif %}{% if slot.is_selected %} selected{% endif %}">
-                            <div class="slot-head">
-                                <div class="slot-title">{{ slot.pair_number }} пара — {{ slot.time }}</div>
-                                <div>{% if slot.is_busy %}Занят{% else %}Свободен{% endif %}</div>
+                <div class="timeline">
+                    {% for room_name in free_rooms %}
+                        <a class="slot-link" href="?date={{ selected_date }}&pair={{ selected_pair }}&room={{ room_name|urlencode }}&show_free_rooms=1">
+                            <div class="slot-card{% if room_name == selected_room %} selected{% endif %}">
+                                <div class="slot-head">
+                                    <div class="slot-title">{{ room_name }}</div>
+                                    <div>Свободен</div>
+                                </div>
+                                <div class="slot-meta">Кабинет свободен на {{ selected_pair }} паре.</div>
+                                <div class="badges">
+                                    {% if room_name == selected_room %}
+                                        <span class="badge badge-blue">Данные открыты справа</span>
+                                    {% else %}
+                                        <span class="badge badge-gray">Показать данные</span>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <div class="slot-meta">{% if slot.is_busy %}{{ slot.subject }}{% else %}В это время выбранный кабинет свободен{% endif %}</div>
-                            <div class="slot-meta">Преподаватель: {{ slot.teacher }}{% if slot.group and slot.group != "—" %} · Группа: {{ slot.group }}{% endif %}</div>
-                            <div class="badges">
-                                {% if slot.is_active %}<span class="badge badge-gold">Текущая пара сегодня</span>{% endif %}
-                                {% if slot.is_selected %}<span class="badge badge-blue">Выбрана для просмотра</span>{% else %}<span class="badge badge-gray">Открыть данные этой пары</span>{% endif %}
+                        </a>
+                    {% empty %}
+                        <div class="warning">Свободные кабинеты не найдены.</div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <h2>Занятость кабинета в течение дня</h2>
+
+                <div class="timeline">
+                    {% for slot in room_timeline %}
+                        <a class="slot-link" href="?date={{ selected_date }}&room={{ selected_room|urlencode }}&pair={{ slot.pair_number }}">
+                            <div class="slot-card{% if slot.is_active %} active{% endif %}{% if slot.is_selected %} selected{% endif %}">
+                                <div class="slot-head">
+                                    <div class="slot-title">{{ slot.pair_number }} пара — {{ slot.time }}</div>
+                                    <div>{% if slot.is_busy %}Занят{% else %}Свободен{% endif %}</div>
+                                </div>
+                                <div class="slot-meta">{% if slot.is_busy %}{{ slot.subject }}{% else %}В это время выбранный кабинет свободен{% endif %}</div>
+                                <div class="slot-meta">Преподаватель: {{ slot.teacher }}{% if slot.group and slot.group != "—" %} · Группа: {{ slot.group }}{% endif %}</div>
+                                <div class="badges">
+                                    {% if slot.is_active %}<span class="badge badge-gold">Текущая пара сегодня</span>{% endif %}
+                                    {% if slot.is_selected %}<span class="badge badge-blue">Выбрана для просмотра</span>{% else %}<span class="badge badge-gray">Открыть данные этой пары</span>{% endif %}
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                {% endfor %}
-            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
 
         <div class="card">
@@ -362,8 +424,8 @@
                 {% empty %}
                     <div class="sensor-item">
                         <div>
-                            <div class="sensor-name">Датчики не найдены</div>
-                            <div class="sensor-type">Для этого кабинета пока нет данных в локальной базе</div>
+                            <div class="sensor-name">{% if selected_room %}Датчики не найдены{% else %}Кабинет не выбран{% endif %}</div>
+                            <div class="sensor-type">{% if selected_room %}Для этого кабинета пока нет данных в локальной базе{% else %}Выберите кабинет или откройте список свободных кабинетов{% endif %}</div>
                         </div>
                         <div class="sensor-value">—</div>
                     </div>
