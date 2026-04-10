@@ -247,6 +247,191 @@
             margin-top: 30px;
             color: #6b7280;
         }
+
+        .room-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 8px;
+            margin-bottom: 6px;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .room-link:hover {
+            background: #e0e7ff;
+        }
+
+        .room-text {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 8px;
+            margin-bottom: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            z-index: 9998;
+        }
+
+        .popup-overlay.open {
+            display: block;
+        }
+
+        .room-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: min(760px, calc(100vw - 32px));
+            max-height: min(86vh, 900px);
+            overflow: auto;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 24px 54px rgba(15, 23, 42, 0.22);
+            display: none;
+            z-index: 9999;
+        }
+
+        .room-popup.open {
+            display: block;
+        }
+
+        .popup-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 18px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .popup-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .popup-close {
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            font-size: 28px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .popup-body {
+            padding: 20px;
+        }
+
+        .popup-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .popup-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .popup-card-title {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .popup-card-value {
+            color: #111827;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .popup-section {
+            margin-top: 18px;
+        }
+
+        .popup-section h3 {
+            margin: 0 0 10px;
+            color: #374151;
+        }
+
+        .sensor-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .sensor-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: center;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 14px;
+        }
+
+        .sensor-name {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .sensor-meta {
+            margin-top: 4px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .sensor-value {
+            font-weight: 700;
+            color: #4338ca;
+            white-space: nowrap;
+        }
+
+        .popup-description {
+            color: #4b5563;
+            line-height: 1.55;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .popup-empty {
+            color: #6b7280;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        @media (max-width: 700px) {
+            .popup-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -361,7 +546,17 @@
                                 <div class="meta">
                                     🚪
                                     {% for room in pair.rooms %}
-                                        {{ room.number }}{% if not forloop.last %}, {% endif %}
+                                        {% if room.popup_available %}
+                                            <button
+                                                type="button"
+                                                class="room-link"
+                                                onclick="openRoomPopup('{{ room.number|escapejs }}')"
+                                            >
+                                                {{ room.number }}
+                                            </button>
+                                        {% else %}
+                                            <span class="room-text">{{ room.number }}</span>
+                                        {% endif %}
                                     {% endfor %}
                                 </div>
                             {% endif %}
@@ -401,6 +596,238 @@
 {% endif %}
 
 </div>
+
+{{ room_popup_data|json_script:"room-popup-data" }}
+
+<div id="room-popup-overlay" class="popup-overlay" onclick="closeRoomPopup()"></div>
+
+<div id="room-popup" class="room-popup" aria-hidden="true">
+    <div class="popup-header">
+        <div class="popup-title" id="room-popup-title">Кабинет</div>
+        <button type="button" class="popup-close" onclick="closeRoomPopup()">×</button>
+    </div>
+
+    <div class="popup-body">
+        <div class="popup-grid">
+            <div class="popup-card">
+                <div class="popup-card-title">Этаж</div>
+                <div class="popup-card-value" id="popup-floor">Нету</div>
+            </div>
+            <div class="popup-card">
+                <div class="popup-card-title">Всего датчиков</div>
+                <div class="popup-card-value" id="popup-sensors-count">0</div>
+            </div>
+            <div class="popup-card">
+                <div class="popup-card-title">Стулья</div>
+                <div class="popup-card-value" id="popup-chairs">Нету</div>
+            </div>
+            <div class="popup-card">
+                <div class="popup-card-title">Парты</div>
+                <div class="popup-card-value" id="popup-desks">Нету</div>
+            </div>
+            <div class="popup-card">
+                <div class="popup-card-title">Компьютеры</div>
+                <div class="popup-card-value" id="popup-computers">Нету</div>
+            </div>
+            <div class="popup-card">
+                <div class="popup-card-title">Окна</div>
+                <div class="popup-card-value" id="popup-windows">Нету</div>
+            </div>
+            <div class="popup-card">
+                <div class="popup-card-title">Кондиционеры</div>
+                <div class="popup-card-value" id="popup-conditioners">Нету</div>
+            </div>
+            <div class="popup-card">
+                <div class="popup-card-title">Последнее обновление</div>
+                <div class="popup-card-value" id="popup-updated-at" style="font-size:16px;">Нету</div>
+            </div>
+        </div>
+
+        <div class="popup-section">
+            <h3>Текущее состояние</h3>
+            <div class="popup-grid">
+                <div class="popup-card">
+                    <div class="popup-card-title">Температура</div>
+                    <div class="popup-card-value" id="popup-temperature">Нету</div>
+                </div>
+                <div class="popup-card">
+                    <div class="popup-card-title">CO2</div>
+                    <div class="popup-card-value" id="popup-co2">Нету</div>
+                </div>
+                <div class="popup-card">
+                    <div class="popup-card-title">Влажность</div>
+                    <div class="popup-card-value" id="popup-humidity">Нету</div>
+                </div>
+                <div class="popup-card">
+                    <div class="popup-card-title">Свет / кондиционер</div>
+                    <div class="popup-card-value" id="popup-state-flags" style="font-size:16px;">Нету</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="popup-section">
+            <h3>Описание кабинета</h3>
+            <div id="popup-description" class="popup-description">Нету</div>
+        </div>
+
+        <div class="popup-section">
+            <h3>Датчики кабинета</h3>
+            <div id="popup-sensor-list" class="sensor-list"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const roomPopupData = JSON.parse(document.getElementById("room-popup-data").textContent);
+    const roomPopup = document.getElementById("room-popup");
+    const roomPopupOverlay = document.getElementById("room-popup-overlay");
+
+    function valueOrText(value, fallback = "Нету", suffix = "") {
+        if (value === null || value === undefined || value === "") {
+            return fallback;
+        }
+        return `${value}${suffix}`;
+    }
+
+    function boolLabel(value) {
+        if (value === null || value === undefined) {
+            return "Нету";
+        }
+        return value ? "вкл" : "выкл";
+    }
+
+    function normalizeRoomName(value) {
+        if (!value) {
+            return "";
+        }
+        return String(value)
+            .trim()
+            .toLowerCase()
+            .replace(/^пр/, "")
+            .replace(/\s+/g, "")
+            .replace(/[^0-9a-zа-я]+/g, "");
+    }
+
+    function findRoomData(roomName) {
+        if (roomPopupData[roomName]) {
+            return roomPopupData[roomName];
+        }
+
+        const normalizedRequested = normalizeRoomName(roomName);
+
+        for (const key in roomPopupData) {
+            if (normalizeRoomName(key) === normalizedRequested) {
+                return roomPopupData[key];
+            }
+        }
+
+        return null;
+    }
+
+    function setPopupText(id, value) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value;
+        }
+    }
+
+    function renderSensorList(items) {
+        const container = document.getElementById("popup-sensor-list");
+        container.innerHTML = "";
+
+        if (!items || !items.length) {
+            const empty = document.createElement("div");
+            empty.className = "popup-empty";
+            empty.textContent = "Нету";
+            container.appendChild(empty);
+            return;
+        }
+
+        items.forEach((sensor) => {
+            const row = document.createElement("div");
+            row.className = "sensor-item";
+
+            const left = document.createElement("div");
+
+            const name = document.createElement("div");
+            name.className = "sensor-name";
+            name.textContent = sensor.name || "Нету";
+
+            const meta = document.createElement("div");
+            meta.className = "sensor-meta";
+            meta.textContent = `${sensor.type || "Нету"} · ${sensor.status || "Нету"}`;
+
+            left.appendChild(name);
+            left.appendChild(meta);
+
+            const value = document.createElement("div");
+            value.className = "sensor-value";
+            value.textContent = sensor.value || "Нету";
+
+            row.appendChild(left);
+            row.appendChild(value);
+
+            container.appendChild(row);
+        });
+    }
+
+    function openRoomPopup(roomName) {
+        const room = findRoomData(roomName);
+
+        document.body.style.overflow = "hidden";
+        roomPopup.classList.add("open");
+        roomPopupOverlay.classList.add("open");
+        roomPopup.setAttribute("aria-hidden", "false");
+
+        if (!room) {
+            setPopupText("room-popup-title", roomName);
+            setPopupText("popup-floor", "Нету");
+            setPopupText("popup-sensors-count", "0");
+            setPopupText("popup-chairs", "Нету");
+            setPopupText("popup-desks", "Нету");
+            setPopupText("popup-computers", "Нету");
+            setPopupText("popup-windows", "Нету");
+            setPopupText("popup-conditioners", "Нету");
+            setPopupText("popup-updated-at", "Нету");
+            setPopupText("popup-temperature", "Нету");
+            setPopupText("popup-co2", "Нету");
+            setPopupText("popup-humidity", "Нету");
+            setPopupText("popup-state-flags", "Нету");
+            setPopupText("popup-description", "Нету");
+            renderSensorList([]);
+            return;
+        }
+
+        setPopupText("room-popup-title", room.room || roomName);
+        setPopupText("popup-floor", valueOrText(room.floor));
+        setPopupText("popup-sensors-count", valueOrText(room.sensors_count, "0"));
+        setPopupText("popup-chairs", valueOrText(room.chairs));
+        setPopupText("popup-desks", valueOrText(room.desks));
+        setPopupText("popup-computers", valueOrText(room.computers));
+        setPopupText("popup-windows", valueOrText(room.windows));
+        setPopupText("popup-conditioners", valueOrText(room.conditioners));
+        setPopupText("popup-updated-at", valueOrText(room.updated_at));
+        setPopupText("popup-temperature", room.temperature !== null && room.temperature !== undefined ? `${room.temperature} °C` : "Нету");
+        setPopupText("popup-co2", room.co2 !== null && room.co2 !== undefined ? `${room.co2}` : "Нету");
+        setPopupText("popup-humidity", room.humidity !== null && room.humidity !== undefined ? `${room.humidity}` : "Нету");
+        setPopupText("popup-state-flags", `Свет: ${boolLabel(room.light_on)} · Кондиционер: ${boolLabel(room.conditioner_on)}`);
+        setPopupText("popup-description", room.description || "Нету");
+        renderSensorList(room.sensor_cards || []);
+    }
+
+    function closeRoomPopup() {
+        document.body.style.overflow = "";
+        roomPopup.classList.remove("open");
+        roomPopupOverlay.classList.remove("open");
+        roomPopup.setAttribute("aria-hidden", "true");
+    }
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeRoomPopup();
+        }
+    });
+</script>
 
 {% include "includes/notifications_popup.html" %}
 </body>

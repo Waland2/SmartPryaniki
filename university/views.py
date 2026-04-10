@@ -125,6 +125,12 @@ def deduplicate_schedule(schedule):
     return deduplicated
 
 
+def is_virtual_room(value):
+    raw = (value or "").strip().lower()
+    normalized = raw.replace(" ", "").replace(".", "")
+    return normalized in {"сдо", "lms", "webinar", "teams", "zoom", "online", "онлайн"}
+
+
 def prepare_schedule_for_template(schedule):
     prepared = []
 
@@ -145,12 +151,20 @@ def prepare_schedule_for_template(schedule):
                 rooms = pair.get("rooms") or []
                 show_rooms = location_name.lower() != "webinar"
 
+                prepared_rooms = []
+                for room in rooms:
+                    room_number = (room.get("number") or "").strip()
+                    prepared_rooms.append({
+                        "number": room_number,
+                        "popup_available": bool(room_number) and not is_virtual_room(room_number),
+                    })
+
                 prepared_pairs.append({
                     "subject_name": ((pair.get("subject") or {}).get("name") or "").strip(),
                     "subject_type": ((pair.get("subject_type") or {}).get("type") or "").strip(),
                     "teachers": pair.get("teachers") or [],
                     "location_name": location_name,
-                    "rooms": rooms,
+                    "rooms": prepared_rooms,
                     "show_rooms": show_rooms,
                     "date_range": format_date_range(pair["start_date"], pair["end_date"]),
                 })
@@ -164,6 +178,7 @@ def prepare_schedule_for_template(schedule):
         if day_pairs:
             prepared.append({
                 "key": day,
+                "label": DAY_LABELS_RU.get(day, day),
                 "pairs": day_pairs,
             })
 
@@ -318,21 +333,24 @@ def build_room_info(room_value):
     room = get_room_model_by_input(room_value)
     if not room:
         return {
-            "room": canonical_room_name(room_value),
-            "floor": "—",
-            "chairs": "—",
-            "desks": "—",
-            "computers": "—",
-            "conditioners": "—",
-            "conditioners_count": "—",
+            "room": canonical_room_name(room_value) or (room_value or ""),
+            "floor": "Нету",
+            "chairs": "Нету",
+            "desks": "Нету",
+            "computers": "Нету",
+            "windows": "Нету",
+            "description": "Нету",
+            "conditioners": "Нету",
+            "conditioners_count": "Нету",
             "sensors_count": 0,
             "temperature": None,
             "co2": None,
             "humidity": None,
             "light_on": None,
             "conditioner_on": None,
-            "updated_at": "—",
+            "updated_at": "Нету",
             "sensor_cards": [],
+            "exists_in_db": False,
         }
 
     sensors = room.sensor_set.select_related("sensor_type").all()
@@ -367,7 +385,7 @@ def build_room_info(room_value):
             "name": sensor.name,
             "type": sensor_type_name or "Датчик",
             "status": sensor.status,
-            "value": "—" if sensor.last_value is None else str(sensor.last_value),
+            "value": "Нету" if sensor.last_value is None else str(sensor.last_value),
         })
 
     return {
@@ -376,6 +394,8 @@ def build_room_info(room_value):
         "chairs": room.chairs,
         "desks": room.desks,
         "computers": room.computers,
+        "windows": room.windows,
+        "description": room.description or "Нету",
         "conditioners": room.conditioners,
         "conditioners_count": room.conditioners,
         "sensors_count": sensors.count(),
@@ -384,9 +404,55 @@ def build_room_info(room_value):
         "humidity": humidity,
         "light_on": light_on,
         "conditioner_on": conditioner_on,
-        "updated_at": updated_at.strftime("%d.%m.%Y %H:%M") if updated_at else "—",
+        "updated_at": updated_at.strftime("%d.%m.%Y %H:%M") if updated_at else "Нету",
         "sensor_cards": sensor_cards,
+        "exists_in_db": True,
     }
+
+
+def build_room_popup_map(schedule):
+    room_popup_map = {}
+
+    for lessons in (schedule or {}).values():
+        if not lessons:
+            continue
+
+        for pairs in lessons.values():
+            for pair in pairs or []:
+                for room in pair.get("rooms") or []:
+                    room_number = (room.get("number") or "").strip()
+                    if not room_number or is_virtual_room(room_number):
+                        continue
+
+                    canonical_name = canonical_room_name(room_number)
+                    if not canonical_name:
+                        continue
+
+                    if canonical_name in room_popup_map:
+                        continue
+
+                    info = build_room_info(canonical_name)
+                    room_popup_map[canonical_name] = {
+                        "room": info.get("room") or canonical_name,
+                        "exists_in_db": info.get("exists_in_db", False),
+                        "floor": info.get("floor"),
+                        "chairs": info.get("chairs"),
+                        "desks": info.get("desks"),
+                        "computers": info.get("computers"),
+                        "windows": info.get("windows"),
+                        "conditioners": info.get("conditioners"),
+                        "description": info.get("description") or "Нету",
+                        "sensors_count": info.get("sensors_count", 0),
+                        "temperature": info.get("temperature"),
+                        "co2": info.get("co2"),
+                        "humidity": info.get("humidity"),
+                        "light_on": info.get("light_on"),
+                        "conditioner_on": info.get("conditioner_on"),
+                        "updated_at": info.get("updated_at") or "Нету",
+                        "sensor_cards": info.get("sensor_cards") or [],
+                    }
+
+    return room_popup_map
 
 
 def _get_rooms_catalog():
@@ -873,6 +939,7 @@ def schedule_view(request):
                 warning = "Ничего не найдено по заданным параметрам"
 
     prepared_schedule = prepare_schedule_for_template(schedule) if schedule else None
+    room_popup_data = build_room_popup_map(schedule) if schedule else {}
 
     return render(request, "schedule.html", {
         "schedule": prepared_schedule,
@@ -883,6 +950,7 @@ def schedule_view(request):
         "warning": warning,
         "date_from": date_from,
         "date_to": date_to,
+        "room_popup_data": room_popup_data,
     })
 
 
