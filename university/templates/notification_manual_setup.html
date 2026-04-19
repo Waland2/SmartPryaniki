@@ -1,105 +1,68 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Ручная настройка среды</title>
-    <style>
-        body { font-family: "Segoe UI", sans-serif; background:#eef2f7; margin:0; }
-        .header {
-            background: white;
-            border-bottom: 1px solid #dbe3ee;
-            position: sticky;
-            top: 0;
-            z-index: 20;
-        }
-        .header-inner {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
-        .brand {
-            font-size: 22px;
-            font-weight: 700;
-            color: #2c3e50;
-            text-decoration: none;
-        }
-        .nav {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .nav a {
-            color: #4b5563;
-            text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: 0.2s;
-        }
-        .nav a:hover { background: #f3f6fb; color: #111827; }
-        .nav .active { background: #e9efff; color: #4338ca; font-weight: 600; }
+{% extends "layout.html" %}
 
-        .page { max-width: 760px; margin: 32px auto; padding: 0 20px; }
-        .card {
-            background:#fff; border-radius:18px; padding:24px;
-            box-shadow:0 10px 24px rgba(15,23,42,.06);
-            border:1px solid #dbe3ee;
-        }
-        label { display:block; margin:16px 0 8px; color:#475569; font-weight:700; }
-        input[type="number"] {
-            width:100%; padding:12px 14px; border-radius:12px; border:1px solid #cbd5e1;
-            box-sizing:border-box;
-        }
-        .row { display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; }
-        button, a {
-            border:none; border-radius:12px; padding:12px 16px; cursor:pointer;
-            font-weight:700; text-decoration:none; display:inline-flex; align-items:center;
-        }
-        .primary { background:#4f46e5; color:#fff; }
-        .ghost { background:#f8fafc; color:#334155; border:1px solid #dbe3ee; }
-        .meta { color:#64748b; margin-top:8px; line-height: 1.6; }
-        .checkbox { display:flex; align-items:center; gap:10px; margin-top:14px; }
-        .checkbox input { width:auto; }
-        .flash { background:#fff7ed; border:1px solid #fdba74; color:#9a3412; padding:12px 14px; border-radius:12px; margin-bottom:16px; }
-        .hint {
-            margin-top: 12px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #1d4ed8;
-            line-height: 1.6;
-        }
-    </style>
-</head>
-<body>
-<header class="header">
-    <div class="header-inner">
-        <div class="header-left">
-            <a href="/schedule/" class="brand">Умные Пряники</a>
-            <nav class="nav">
-                <a href="/schedule/">Расписание</a>
-                <a href="/current-day/">Текущий день</a>
-                <a href="/rooms/">Кабинеты</a>
-                <a href="/notifications/" class="active">Уведомления</a>
-            </nav>
-        </div>
-    </div>
-</header>
+{% block title %}Ручная настройка среды{% endblock %}
 
+{% block extra_styles %}
+<style>
+    body { font-family: "Segoe UI", sans-serif; background: #eef2f7; margin: 0; }
+
+    .page { max-width: 760px; margin: 32px auto; padding: 0 20px; }
+
+    .card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
+        border: 1px solid #dbe3ee;
+    }
+
+    label { display: block; margin: 16px 0 8px; color: #475569; font-weight: 700; }
+
+    input[type="number"] {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        box-sizing: border-box;
+    }
+
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+
+    button,
+    a {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+        cursor: pointer;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .primary { background: #4f46e5; color: #fff; }
+    .ghost { background: #f8fafc; color: #334155; border: 1px solid #dbe3ee; }
+    .meta { color: #64748b; margin-top: 8px; line-height: 1.6; }
+    .checkbox { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+    .checkbox input { width: auto; }
+    .flash { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px 14px; border-radius: 12px; margin-bottom: 16px; }
+
+    .hint {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
 <div class="page">
     <div class="card">
-        <h1 style="margin-top:0;">Ручная настройка среды</h1>
+        <h1 style="margin-top: 0;">Ручная настройка среды</h1>
         <div class="meta">{{ item.title }}</div>
         <div class="meta">Кабинет: {{ item.room_name }} · Дата: {{ item.lesson_date }} · Пара: {{ item.lesson_number }}</div>
         <div class="meta">{{ item.message }}</div>
@@ -149,7 +112,4 @@
         </form>
     </div>
 </div>
-
-{% include "includes/notifications_popup.html" %}
-</body>
-</html>
+{% endblock %}

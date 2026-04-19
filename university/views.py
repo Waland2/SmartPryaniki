@@ -204,17 +204,35 @@ def normalize_room(value):
         return ""
     raw = str(value).strip().lower()
     raw = raw.replace("ауд.", "").replace("ауд", "")
+    raw = raw.replace("аудитория", "").replace("кабинет", "")
     raw = raw.replace(" ", "")
-    raw = re.sub(r"^пр", "", raw)
-    raw = re.sub(r"[^0-9a-zа-я]+", "", raw)
+    raw = "".join(ch for ch in raw if ch.isalnum())
+
+    for prefix in ("пр", "pr", "room", "kab"):
+        if raw.startswith(prefix):
+            raw = raw[len(prefix):]
+            break
+
     return raw
+
+
+def extract_room_code(value):
+    normalized = normalize_room(value)
+    if not normalized:
+        return ""
+
+    match = re.search(r"\d{3,5}", normalized)
+    return match.group(0) if match else ""
 
 
 def canonical_room_name(value):
     normalized = normalize_room(value)
     if not normalized:
         return ""
-    return f"Пр{normalized}" if normalized[0].isdigit() else normalized.title()
+    room_code = extract_room_code(normalized)
+    if room_code:
+        return f"Пр{room_code}"
+    return normalized.title()
 
 
 def parse_date_safe(value):
@@ -326,7 +344,18 @@ def get_room_model_by_input(room_value):
     if not normalized:
         return None
 
-    return _get_rooms_catalog()["normalized_map"].get(normalized)
+    catalog = _get_rooms_catalog()
+    room = catalog["normalized_map"].get(normalized)
+    if room is not None:
+        return room
+
+    room_code = extract_room_code(room_value)
+    if room_code:
+        room = catalog["code_map"].get(room_code)
+        if room is not None:
+            return room
+
+    return None
 
 
 def build_room_info(room_value):
@@ -456,24 +485,29 @@ def build_room_popup_map(schedule):
 
 
 def _get_rooms_catalog():
-    cache_key = "rooms_catalog_v2"
+    cache_key = "rooms_catalog_v3"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
 
     rooms = list(Room.objects.all().order_by("name").prefetch_related("sensor_set__sensor_type"))
     normalized_map = {}
+    code_map = {}
     available_rooms = []
     seen = set()
 
     for room in rooms:
         canonical = canonical_room_name(room.name)
         normalized = normalize_room(canonical)
+        room_code = extract_room_code(room.name)
         if not normalized:
             continue
 
         if normalized not in normalized_map:
             normalized_map[normalized] = room
+
+        if room_code and room_code not in code_map:
+            code_map[room_code] = room
 
         if normalized not in seen:
             seen.add(normalized)
@@ -482,6 +516,7 @@ def _get_rooms_catalog():
     data = {
         "rooms": rooms,
         "normalized_map": normalized_map,
+        "code_map": code_map,
         "available_rooms": available_rooms,
     }
     cache.set(cache_key, data, ROOMS_CACHE_TTL)
