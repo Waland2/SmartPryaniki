@@ -1,17 +1,220 @@
 {% extends "dashboard/base.html" %}
 
 {% block content %}
-<div class="card">
-    <h2>{{ room.name }}</h2>
-    <p class="muted">Этаж {{ room.floor }}</p>
-    <p>{{ room.description }}</p>
 
-    <div class="actions">
-        <a class="btn" href="{% url 'university:room_simulate' room.id %}">Запустить симуляцию</a>
-        <a class="btn btn-secondary" href="{% url 'university:room_history' room.id %}">История показаний</a>
-        <a class="btn btn-secondary" href="/admin/university/room/{{ room.id }}/change/">Редактировать кабинет</a>
+<div class="card">
+    <h2>Кабинет: {{ room.name }}</h2>
+    <p class="muted">Этаж {{ room.floor }}</p>
+
+    {% if room.description %}
+        <p>{{ room.description }}</p>
+    {% else %}
+        <p class="muted">Описание кабинета не указано.</p>
+    {% endif %}
+
+    <div class="actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+        <a class="btn" href="{% url 'university:room_simulate' room.id %}">
+            Запустить симуляцию
+        </a>
+
+        <a class="btn btn-secondary" href="{% url 'university:room_history' room.id %}">
+            История показаний
+        </a>
+
+        <a class="btn btn-secondary" href="/admin/university/climateactionlog/?room__id__exact={{ room.id }}">
+            История настройки кабинета
+        </a>
+
+        <a class="btn btn-secondary" href="/admin/university/room/{{ room.id }}/change/">
+            Редактировать кабинет
+        </a>
     </div>
 </div>
+
+
+<div class="card" style="margin-top: 20px;">
+    <h2>Состояние микроклимата</h2>
+
+    <div class="room-meta">
+        <div class="pill">
+            Температура: {{ climate_snapshot.temperature|default:"—" }} °C
+        </div>
+
+        <div class="pill">
+            Влажность: {{ climate_snapshot.humidity|default:"—" }} %
+        </div>
+
+        <div class="pill">
+            CO₂: {{ climate_snapshot.co2|default:"—" }} ppm
+        </div>
+
+        <div class="pill">
+            Статус: {{ climate_snapshot.summary.status|default:"—" }}
+        </div>
+    </div>
+
+    <div style="margin-top: 14px;">
+        <div>
+            <strong>Температура:</strong>
+            {{ climate_snapshot.summary.temperature.reason|default:"Нет данных" }}
+        </div>
+
+        <div>
+            <strong>Влажность:</strong>
+            {{ climate_snapshot.summary.humidity.reason|default:"Нет данных" }}
+        </div>
+
+        <div>
+            <strong>CO₂:</strong>
+            {{ climate_snapshot.summary.co2.reason|default:"Нет данных" }}
+        </div>
+    </div>
+
+    {% if climate_snapshot.summary.needs_ventilation %}
+        <div style="margin-top: 12px;" class="status-error">
+            Требуется проветривание
+        </div>
+    {% elif climate_snapshot.summary.too_hot %}
+        <div style="margin-top: 12px;" class="status-error">
+            В кабинете жарко
+        </div>
+    {% elif climate_snapshot.summary.too_cold %}
+        <div style="margin-top: 12px;" class="status-disabled">
+            В кабинете холодно
+        </div>
+    {% else %}
+        <div style="margin-top: 12px;" class="status-active">
+            Микроклимат в допустимом диапазоне
+        </div>
+    {% endif %}
+</div>
+
+
+<div class="card" style="margin-top: 20px;">
+    <h2>Последняя автоматическая настройка</h2>
+
+    {% if last_climate_log %}
+        <div class="room-meta">
+            <div class="pill">
+                Дата пары: {{ last_climate_log.lesson_date|date:"d.m.Y" }}
+            </div>
+
+            <div class="pill">
+                Время пары: {{ last_climate_log.lesson_time|time:"H:i" }}
+            </div>
+
+            <div class="pill">
+                Действие: {{ last_climate_log.get_action_display }}
+            </div>
+
+            <div class="pill">
+                Проверено: {{ last_climate_log.created_at|date:"d.m.Y H:i" }}
+            </div>
+        </div>
+
+        <div style="margin-top: 14px;">
+            <strong>Проверенные показатели и причина решения:</strong>
+            <p style="margin-top: 8px;">
+                {{ last_climate_log.reason }}
+            </p>
+        </div>
+    {% else %}
+        <div class="status-disabled" style="margin-top: 12px;">
+            Автоматическая настройка этого кабинета ещё не выполнялась.
+        </div>
+    {% endif %}
+
+    <div class="actions" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+        <a class="btn btn-secondary" href="/admin/university/climateactionlog/?room__id__exact={{ room.id }}">
+            Открыть всю историю настройки
+        </a>
+    </div>
+</div>
+
+
+<div class="card" style="margin-top: 20px;">
+    <h2>Последние настройки кабинета</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Проверено</th>
+                <th>Дата пары</th>
+                <th>Время пары</th>
+                <th>Действие</th>
+                <th>Причина</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for log in climate_logs %}
+                <tr>
+                    <td>{{ log.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>{{ log.lesson_date|date:"d.m.Y" }}</td>
+                    <td>{{ log.lesson_time|time:"H:i" }}</td>
+                    <td>{{ log.get_action_display }}</td>
+                    <td>{{ log.reason }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">
+                        История автоматической настройки пока пустая.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<div class="card" style="margin-top: 20px;">
+    <h2>Кондиционеры кабинета</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Статус</th>
+                <th>Включен</th>
+                <th>Режим</th>
+                <th>Целевая температура</th>
+                <th>Мощность</th>
+                <th>Обновлено</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for conditioner in conditioners %}
+                <tr>
+                    <td>{{ conditioner.name }}</td>
+
+                    <td>
+                        {% if conditioner.status == "active" %}
+                            <span class="status-active">Работает</span>
+                        {% elif conditioner.status == "error" %}
+                            <span class="status-error">Ошибка</span>
+                        {% else %}
+                            <span class="status-disabled">Выключен</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ conditioner.enabled|yesno:"Да,Нет" }}</td>
+                    <td>{{ conditioner.get_mode_display }}</td>
+                    <td>{{ conditioner.target_temperature|default:"—" }}</td>
+                    <td>{{ conditioner.power }}</td>
+                    <td>{{ conditioner.last_updated|date:"d.m.Y H:i" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7">
+                        У этого кабинета пока нет кондиционеров.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 
 <div class="card" style="margin-top: 20px;">
     <h2>Датчики кабинета</h2>
@@ -27,11 +230,13 @@
                 <th></th>
             </tr>
         </thead>
+
         <tbody>
             {% for sensor in sensors %}
                 <tr>
                     <td>{{ sensor.name }}</td>
                     <td>{{ sensor.sensor_type.name }}</td>
+
                     <td>
                         {% if sensor.status == "active" %}
                             <span class="status-active">Работает</span>
@@ -41,20 +246,27 @@
                             <span class="status-disabled">Выключен</span>
                         {% endif %}
                     </td>
+
                     <td>{{ sensor.last_value|default:"—" }}</td>
                     <td>{{ sensor.last_updated|date:"d.m.Y H:i" }}</td>
+
                     <td>
-                        <a href="/admin/university/sensor/{{ sensor.id }}/change/">Изменить</a>
+                        <a href="/admin/university/sensor/{{ sensor.id }}/change/">
+                            Изменить
+                        </a>
                     </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="6">У этого кабинета пока нет датчиков.</td>
+                    <td colspan="6">
+                        У этого кабинета пока нет датчиков.
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
 
 <div class="card" style="margin-top: 20px;">
     <h2>Последние показания</h2>
@@ -67,6 +279,7 @@
                 <th>Время</th>
             </tr>
         </thead>
+
         <tbody>
             {% for item in latest_data %}
                 <tr>
@@ -76,10 +289,13 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="3">История пока пустая.</td>
+                    <td colspan="3">
+                        История показаний пока пустая.
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
 {% endblock %}

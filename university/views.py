@@ -7,7 +7,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import moderator_or_admin_required
 from accounts.models import UserProfile
-from .models import Room, SensorData
+from .models import Room, SensorData, ClimateActionLog
+from .climate_services import get_room_climate_snapshot
 from api_client import APIClient
 
 
@@ -752,7 +753,7 @@ def index_redirect(request):
 
 @moderator_or_admin_required
 def dashboard_home(request):
-    rooms = Room.objects.prefetch_related("sensor_set__sensor_type").all()
+    rooms = Room.objects.prefetch_related("sensor_set__sensor_type", "conditioner_set").all()
 
     total_rooms = rooms.count()
     total_sensors = sum(room.sensor_set.count() for room in rooms)
@@ -773,26 +774,55 @@ def dashboard_home(request):
 @moderator_or_admin_required
 def room_detail(request, room_id):
     room = get_object_or_404(
-        Room.objects.prefetch_related("sensor_set__sensor_type"),
+        Room.objects.prefetch_related(
+            "sensor_set__sensor_type",
+            "conditioner_set",
+        ),
         pk=room_id,
     )
 
     sensors = room.sensor_set.all()
-    latest_data = SensorData.objects.filter(sensor__room=room).select_related("sensor")[:20]
+    conditioners = room.conditioner_set.all()
+
+    latest_data = (
+        SensorData.objects
+        .filter(sensor__room=room)
+        .select_related("sensor", "sensor__sensor_type")
+        .order_by("-created_at")[:20]
+    )
+
+    climate_snapshot = get_room_climate_snapshot(room)
+
+    last_climate_log = (
+        ClimateActionLog.objects
+        .filter(room=room)
+        .order_by("-created_at")
+        .first()
+    )
+
+    climate_logs = (
+        ClimateActionLog.objects
+        .filter(room=room)
+        .order_by("-created_at")[:5]
+    )
 
     context = {
         "room": room,
         "sensors": sensors,
+        "conditioners": conditioners,
         "latest_data": latest_data,
+        "climate_snapshot": climate_snapshot,
+        "last_climate_log": last_climate_log,
+        "climate_logs": climate_logs,
         "title": f"Кабинет: {room.name}",
     }
-    return render(request, "dashboard/room_detail.html", context)
 
+    return render(request, "dashboard/room_detail.html", context)
 
 @moderator_or_admin_required
 def room_simulate(request, room_id):
     room = get_object_or_404(
-        Room.objects.prefetch_related("sensor_set__sensor_type"),
+        Room.objects.prefetch_related("sensor_set__sensor_type", "conditioner_set"),
         pk=room_id,
     )
 

@@ -112,12 +112,15 @@ AUTHENTICATION_BACKENDS = [
 
 LANGUAGE_CODE = 'ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
 USE_TZ = True
 
+WEATHER_API_KEY = "916a2cf46264c68389fde34a5df728e4"
+WEATHER_LAT = 55.7558
+WEATHER_LON = 37.6173
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/

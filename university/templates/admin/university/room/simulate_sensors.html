@@ -43,6 +43,29 @@
         cursor: pointer;
     }
 
+    /* 🔥 КНОПКИ */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+        margin-bottom: 10px;
+    }
+
+    .action-buttons a {
+        padding: 8px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 13px;
+        border: 1px solid var(--hairline-color);
+        background: #f8f8f8;
+        transition: 0.2s;
+    }
+
+    .action-buttons a:hover {
+        background: #eaeaea;
+    }
+
     .results-table {
         width: 100%;
         border-collapse: collapse;
@@ -112,6 +135,21 @@
     {% if selected_room %}
         <div class="simulate-card">
             <h2>Кабинет: {{ selected_room.name }}</h2>
+
+            <!-- 🔥 КНОПКИ В ОДНУ ЛИНИЮ -->
+            <div class="action-buttons">
+                <a href="{% url 'admin:university_room_change' selected_room.id %}">
+                    Редактировать кабинет
+                </a>
+
+                <a href="{% url 'admin:university_sensordata_changelist' %}?sensor__room__id__exact={{ selected_room.id }}">
+                    История показаний
+                </a>
+
+                <a href="{% url 'admin:university_climateactionlog_changelist' %}?room__id__exact={{ selected_room.id }}">
+                    История настройки кабинета
+                </a>
+            </div>
 
             {% if results %}
                 <table class="results-table">
