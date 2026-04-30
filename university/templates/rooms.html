@@ -357,13 +357,15 @@
 
             <div class="sensor-list">
                 {% for sensor in room_info.sensor_cards %}
-                    <div class="sensor-item">
-                        <div>
-                            <div class="sensor-name">{{ sensor.name }}</div>
-                            <div class="sensor-type">{{ sensor.type }} · {{ sensor.status }}</div>
-                        </div>
-                        <div class="sensor-value">{{ sensor.value }}</div>
-                    </div>
+                       {% if "co2" not in sensor.name|lower and "co2" not in sensor.type|lower and "освещ" not in sensor.name|lower and "освещ" not in sensor.type|lower %}
+                            <div class="sensor-item">
+                                <div>
+                                    <div class="sensor-name">{{ sensor.name }}</div>
+                                    <div class="sensor-type">{{ sensor.type }} · {{ sensor.status }}</div>
+                                </div>
+                                <div class="sensor-value">{{ sensor.value }}</div>
+                            </div>
+                        {% endif %}    
                 {% empty %}
                     <div class="sensor-item">
                         <div>
