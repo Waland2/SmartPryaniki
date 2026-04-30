@@ -4,159 +4,927 @@
 
 {% block extra_styles %}
 <style>
-    body { font-family: "Segoe UI", sans-serif; background: #eef2f7; margin: 0; }
+    :root {
+        --bg: #eef2f7;
+        --panel: #ffffff;
+        --line: #dbe3ee;
+        --text: #1f2937;
+        --muted: #64748b;
+        --gold: #4f46e5;
+        --gold-soft: #e9efff;
+        --accent: #4338ca;
+        --shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+        --radius: 24px;
+    }
 
-    .page { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: radial-gradient(circle at top left, #f8fbff 0%, var(--bg) 52%, #e7eef8 100%);
+        color: var(--text);
+    }
+
+    .page {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 28px 24px 34px;
+    }
+
+    .hero {
+        display: grid;
+        grid-template-columns: 1.618fr 1fr;
+        gap: 24px;
+    }
 
     .card {
-        background: #fff;
-        border-radius: 18px;
-        padding: 24px;
-        margin-bottom: 18px;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
-        border: 1px solid #dbe3ee;
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
+        border: 1px solid rgba(79, 70, 229, 0.12);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 28px;
     }
 
-    .title { font-size: 28px; font-weight: 800; margin-bottom: 18px; }
-    .meta { color: #64748b; margin-top: 8px; line-height: 1.6; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
-    .flash { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px 14px; border-radius: 12px; margin-bottom: 16px; }
-    .flash.ok { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+    .hero-card {
+        min-height: 240px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
 
-    button,
-    .button-link {
-        border: none;
-        border-radius: 12px;
-        padding: 12px 16px;
-        cursor: pointer;
-        font-weight: 700;
-        text-decoration: none;
+    .eyebrow {
         display: inline-flex;
         align-items: center;
-    }
-
-    .primary { background: #4f46e5; color: #fff; }
-    .secondary { background: #eef2ff; color: #3730a3; }
-    .ghost { background: #f8fafc; color: #334155; border: 1px solid #dbe3ee; }
-
-    .chip {
-        display: inline-block;
-        padding: 8px 12px;
+        gap: 8px;
+        align-self: flex-start;
+        padding: 9px 14px;
         border-radius: 999px;
-        background: #eef2ff;
-        color: #4338ca;
-        margin-right: 8px;
-        margin-top: 10px;
+        background: var(--gold-soft);
+        color: var(--accent);
+        font-weight: 700;
     }
 
-    .hint {
-        margin-top: 10px;
-        color: #64748b;
+    h1, h2, h3 { margin: 0; }
+
+    h1 {
+        margin-top: 18px;
+        font-size: clamp(38px, 5vw, 58px);
+        line-height: 1.02;
+    }
+
+    h2 { font-size: 28px; }
+
+    .notes {
+        margin-top: 14px;
+        color: var(--muted);
         line-height: 1.6;
     }
 
-    .time-box {
-        margin-top: 12px;
-        padding: 12px 14px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
+    .chips {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 18px;
     }
 
-    .time-row {
-        margin-top: 6px;
-        color: #475569;
+    .chip {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        color: var(--accent);
+        font-weight: 600;
+    }
+
+    .metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .metric {
+        min-height: 112px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .metric-title {
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    .metric-value {
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+    .metric-note {
+        color: var(--accent);
+    }
+
+    .message {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: #eff6ff;
+        border: 1px solid rgba(59, 130, 246, 0.35);
+        color: #1d4ed8;
+        font-weight: 700;
+    }
+
+    .notifications-list {
+        margin-top: 24px;
+        display: grid;
+        gap: 18px;
+    }
+
+    .notification-card {
+        border-radius: 24px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        padding: 24px;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .notification-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        border-color: rgba(79, 70, 229, 0.45);
+    }
+
+    .notification-card.unread {
+        background: linear-gradient(180deg, #eef2ff, #ffffff);
+        border-color: rgba(79, 70, 229, 0.7);
+    }
+
+    .notification-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-start;
+    }
+
+    .notification-title {
+        font-size: 23px;
+        font-weight: 800;
+    }
+
+    .notification-message {
+        margin-top: 10px;
+        color: var(--muted);
+        line-height: 1.55;
+    }
+
+    .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .badge {
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .badge-blue {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .badge-gold {
+        background: #ede9fe;
+        color: #5b21b6;
+    }
+
+    .badge-gray {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .info-box {
+        background: #f8fbff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+    }
+
+    .info-title {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .info-value {
+        margin-top: 10px;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+    .result-box {
+        margin-top: 18px;
+        background: #f8fbff;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 20px;
+    }
+
+    .result-title {
+        font-size: 20px;
+        font-weight: 800;
+        margin-bottom: 14px;
+    }
+
+    .result-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .result-item {
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+    }
+
+    .result-label {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .result-value {
+        margin-top: 8px;
+        font-weight: 800;
+        line-height: 1.45;
+    }
+
+    .actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    button,
+    .button-link {
+        padding: 14px 18px;
+        border: none;
+        background: linear-gradient(135deg, #4f46e5, #4338ca);
+        color: white;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 24px rgba(79, 70, 229, 0.22);
+        font-weight: 800;
+        font: inherit;
+    }
+
+    button:hover,
+    .button-link:hover {
+        background: linear-gradient(135deg, #4338ca, #3730a3);
+    }
+
+    .button-muted {
+        background: #e5e7eb;
+        color: #111827;
+        box-shadow: none;
+    }
+
+    .button-muted:hover {
+        background: #d1d5db;
+    }
+
+    .empty {
+        margin-top: 24px;
+        text-align: center;
+        padding: 40px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+    }
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.48);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .modal-window {
+        background: #ffffff;
+        max-width: 620px;
+        width: 100%;
+        padding: 28px;
+        border-radius: 24px;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.25);
+    }
+
+    .modal-window ul {
+        margin-top: 16px;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+    }
+
+    @media (max-width: 1100px) {
+        .hero,
+        .info-grid,
+        .result-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .page {
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+
+        .metrics {
+            grid-template-columns: 1fr;
+        }
+
+        .notification-head {
+            flex-direction: column;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page">
-    <div class="title">Уведомления</div>
-    <div class="hint">
-        Уведомления привязаны к конкретному преподавателю. Здесь показывается, когда уведомление было отправлено
-        и когда преподаватель его прочитал.
-    </div>
+    <section class="hero">
+        <div class="card hero-card">
+            <div>
+                <div class="eyebrow">
+                    {% if mode == "hidden" %}
+                        Скрытые уведомления
+                    {% else %}
+                        Уведомления
+                    {% endif %}
+                </div>
+
+                <h1>Подготовка кабинетов</h1>
+
+                <div class="notes">
+                    Здесь преподаватель выбирает ручную настройку среды или передаёт подготовку кабинета алгоритму.
+                </div>
+            </div>
+
+            <div class="chips">
+                <div class="chip">
+                    {% if mode == "hidden" %}
+                        Скрытые уведомления: {{ notifications|length }}
+                    {% else %}
+                        Актуальные уведомления: {{ notifications|length }}
+                    {% endif %}
+                </div>
+                <div class="chip">Ручная настройка / алгоритм</div>
+                <div class="chip">Подготовка на перемене</div>
+            </div>
+
+            <div class="actions" style="margin-top: 20px;">
+                <a href="{% url 'university:notifications' %}" class="button-link {% if mode == 'hidden' %}button-muted{% endif %}">
+                    Актуальные уведомления
+                </a>
+
+                <a href="{% url 'university:notifications' %}?mode=hidden" class="button-link {% if mode != 'hidden' %}button-muted{% endif %}">
+                    Скрытые уведомления: {{ hidden_count }}
+                </a>
+
+                <a href="{% url 'university:notifications' %}?mode=history" class="button-link {% if mode != 'history' %}button-muted{% endif %}">
+                    История уведомлений: {{ history_count }}
+                </a>
+            </div>
+        </div>
+
+        <div class="metrics">
+            <div class="card metric">
+                <div class="metric-title">Режим работы</div>
+                <div class="metric-value">
+                    {% if mode == "hidden" %}
+                        Архив
+                    {% else %}
+                        Активно
+                    {% endif %}
+                </div>
+                <div class="metric-note">Актуальные и скрытые уведомления</div>
+            </div>
+
+            <div class="card metric">
+                <div class="metric-title">Алгоритм</div>
+                <div class="metric-value">Авто</div>
+                <div class="metric-note">Учитывает датчики и оснащение</div>
+            </div>
+
+            <div class="card metric">
+                <div class="metric-title">Ручная настройка</div>
+                <div class="metric-value">Есть</div>
+                <div class="metric-note">С ограничениями по значениям</div>
+            </div>
+
+            <div class="card metric">
+                <div class="metric-title">Подготовка</div>
+                <div class="metric-value">≤ 10 мин</div>
+                <div class="metric-note">При нехватке времени — до 5 минут пары</div>
+            </div>
+        </div>
+    </section>
 
     {% if messages %}
         {% for message in messages %}
-            <div class="flash {% if message.tags == 'success' %}ok{% endif %}">{{ message }}</div>
+            <div class="message">{{ message }}</div>
         {% endfor %}
     {% endif %}
 
-    {% for item in notifications %}
-        <div class="card">
-            <div><strong>{{ item.title }}</strong></div>
-            <div class="meta">{{ item.message }}</div>
+    {% if mode == "history" %}
+        <div class="card" style="margin-top: 24px;">
+            <h2>Фильтр истории уведомлений</h2>
 
-            <div>
-                <span class="chip">Дата занятия: {{ item.lesson_date }}</span>
-                <span class="chip">Пара: {{ item.lesson_number }}</span>
-                <span class="chip">Кабинет: {{ item.room_name }}</span>
-                <span class="chip">Группа: {{ item.group_name|default:"—" }}</span>
-            </div>
+            <form method="get" class="actions">
+                <input type="hidden" name="mode" value="history">
 
-            {% if item.recommended_temperature %}
-                <div class="meta">
-                    Рекомендуемая температура: {{ item.recommended_temperature }} °C
-                    {% if item.temperature_min and item.temperature_max %}
-                        · допустимый диапазон: {{ item.temperature_min }}–{{ item.temperature_max }} °C
-                    {% endif %}
+                <div>
+                    <label>Дата от</label>
+                    <input type="date" name="date_from" value="{{ date_from }}">
                 </div>
-            {% endif %}
 
-            {% if item.payload.manual_settings and item.action_choice == "manual" %}
-                <div class="meta">
-                    Ручные параметры:
-                    температура — {{ item.payload.manual_settings.temperature|default:"—" }},
-                    влажность — {{ item.payload.manual_settings.humidity|default:"—" }},
-                    свет — {% if item.payload.manual_settings.light_on %}вкл{% else %}выкл{% endif %},
-                    кондиционер — {% if item.payload.manual_settings.conditioner_on %}вкл{% else %}выкл{% endif %}
+                <div>
+                    <label>Дата до</label>
+                    <input type="date" name="date_to" value="{{ date_to }}">
                 </div>
-            {% endif %}
 
-            <div class="time-box">
-                <div class="time-row">
-                    <strong>Отправлено:</strong> {{ item.created_at|date:"d.m.Y H:i" }}
+                <div>
+                    <label>Кабинет</label>
+                    <input type="text" name="room" value="{{ room_filter }}" placeholder="Например: 1315">
                 </div>
-                <div class="time-row">
-                    <strong>Прочитано:</strong>
-                    {% if item.read_at %}
-                        {{ item.read_at|date:"d.m.Y H:i" }}
-                    {% else %}
-                        ещё не прочитано
-                    {% endif %}
-                </div>
-            </div>
 
-            <div class="meta">
-                Статус: {{ item.get_status_display }} · Выбор: {{ item.get_action_choice_display }}
-            </div>
+                <button type="submit">Показать</button>
 
-            <div class="row">
-                <a class="button-link primary" href="{% url 'university:notification_manual_form' item.pk %}">
-                    Настроить вручную
+                <a href="{% url 'university:notifications' %}?mode=history" class="button-link button-muted">
+                    Сбросить
                 </a>
-
-                {% if item.action_choice != "algorithm" %}
-                    <form method="post" action="{% url 'university:notification_algorithm' item.pk %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="/notifications/">
-                        <button class="secondary" type="submit">Оставить алгоритму</button>
-                    </form>
-                {% endif %}
-
-                {% if item.status == "unread" %}
-                    <form method="post" action="{% url 'university:notification_read' item.pk %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="/notifications/">
-                        <button class="ghost" type="submit">Прочитано</button>
-                    </form>
-                {% endif %}
-            </div>
+            </form>
         </div>
-    {% empty %}
-        <div class="card">Актуальных уведомлений нет.</div>
-    {% endfor %}
+    {% endif %}
+
+
+    {% if notifications %}
+        <section class="notifications-list">
+            {% for notification in notifications %}
+                <article class="notification-card {% if notification.status == 'unread' %}unread{% endif %}">
+                    <div class="notification-head">
+                        <div>
+                            <div class="notification-title">{{ notification.title }}</div>
+                            <div class="notification-message">{{ notification.message }}</div>
+
+                            <div class="badges">
+                                {% if notification.status == "unread" %}
+                                    <span class="badge badge-blue">Новое</span>
+                                {% elif notification.status == "dismissed" %}
+                                    <span class="badge badge-gray">Скрыто</span>
+                                {% else %}
+                                    <span class="badge badge-gray">Прочитано</span>
+                                {% endif %}
+
+                                <span class="badge badge-gold">{{ notification.get_action_choice_display }}</span>
+                            </div>
+
+                            <div class="result-box">
+                                <div class="result-title">
+                                    {% if notification.payload.algorithm_result %}
+                                        Настроено алгоритмом
+                                    {% elif notification.payload.manual_settings %}
+                                        Настроено вручную
+                                    {% else %}
+                                        Не было настроено
+                                    {% endif %}
+                                </div>
+
+                                <div class="notes">
+                                    {% if notification.payload.algorithm_result %}
+                                        Для этого занятия был выбран алгоритм подготовки кабинета.
+                                    {% elif notification.payload.manual_settings %}
+                                        Для этого занятия преподаватель указал ручные параметры.
+                                    {% else %}
+                                        Для этого занятия параметры среды не были выбраны.
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-box">
+                            <div class="info-title">Дата</div>
+                            <div class="info-value">{{ notification.lesson_date }}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-title">Пара</div>
+                            <div class="info-value">{{ notification.lesson_number }}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-title">Кабинет</div>
+                            <div class="info-value">{{ notification.room_name }}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-title">Группа</div>
+                            <div class="info-value">{{ notification.group_name }}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-title">Предмет</div>
+                            <div class="info-value">{{ notification.subject_name }}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-title">Диапазон температуры</div>
+                            <div class="info-value">{{ notification.temperature_min }}–{{ notification.temperature_max }} °C</div>
+                        </div>
+                    </div>
+
+                    <div class="result-box">
+                        <div class="result-title">Рекомендация системы</div>
+
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <div class="result-label">Рекомендуемая температура</div>
+                                <div class="result-value">{{ notification.recommended_temperature }} °C</div>
+                            </div>
+
+                            <div class="result-item">
+                                <div class="result-label">Статус выбора</div>
+                                <div class="result-value">{{ notification.get_action_choice_display }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if notification.payload.algorithm_result %}
+                        <div class="result-box">
+                            <div class="result-title">Выбрана настройка алгоритмом</div>
+
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <div class="result-label">Температура</div>
+                                    <div class="result-value">{{ notification.payload.algorithm_result.temperature }} °C</div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Влажность</div>
+                                    <div class="result-value">{{ notification.payload.algorithm_result.humidity }}%</div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Освещение</div>
+                                    <div class="result-value">
+                                        {% if notification.payload.algorithm_result.light %}
+                                            {{ notification.payload.algorithm_result.light }}%.
+                                            {{ notification.payload.algorithm_result.light_plan }}
+                                        {% else %}
+                                            {{ notification.payload.algorithm_result.light_plan|default:"Нет управления светом" }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Кондиционер</div>
+                                    <div class="result-value">{{ notification.payload.algorithm_result.conditioner }}</div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Окна</div>
+                                    <div class="result-value">{{ notification.payload.algorithm_result.windows }}</div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">CO₂</div>
+                                    <div class="result-value">{{ notification.payload.algorithm_result.co2 }}</div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Проветривание</div>
+                                    <div class="result-value">{{ notification.payload.algorithm_result.ventilation }}</div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Температурный режим</div>
+                                    <div class="result-value">{{ notification.payload.algorithm_result.heating_or_cooling }}</div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Начало подготовки</div>
+                                    <div class="result-value">{{ notification.payload.algorithm_result.preparation_start }}</div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Окончание подготовки</div>
+                                    <div class="result-value">{{ notification.payload.algorithm_result.preparation_end }}</div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Длительность подготовки</div>
+                                    <div class="result-value">{{ notification.payload.algorithm_result.preparation_duration }}</div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Пояснение по времени</div>
+                                    <div class="result-value">
+                                        {{ notification.payload.algorithm_result.preparation_note|default:"Подготовка выполняется на перемене перед парой." }}
+                                    </div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Оснащение кабинета</div>
+                                    <div class="result-value">
+                                        Кондиционеров — {{ notification.payload.algorithm_result.room_conditioners }},
+                                        окон — {{ notification.payload.algorithm_result.room_windows }},
+                                        ПК — {{ notification.payload.algorithm_result.room_computers }},
+                                        стульев — {{ notification.payload.algorithm_result.room_chairs }}.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="notes">{{ notification.payload.algorithm_result.comment }}</div>
+                        </div>
+                    {% endif %}
+
+                    {% if notification.payload.manual_settings %}
+                        <div class="result-box">
+                            <div class="result-title">Выбрана ручная настройка</div>
+
+                            <div class="result-grid">
+                                <div class="result-item">
+                                    <div class="result-label">Температура</div>
+                                    <div class="result-value">
+                                        {% if notification.payload.manual_settings.temperature %}
+                                            {{ notification.payload.manual_settings.temperature }} °C
+                                        {% else %}
+                                            Не настроена
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Влажность</div>
+                                    <div class="result-value">
+                                        {% if notification.payload.manual_settings.humidity %}
+                                            {{ notification.payload.manual_settings.humidity }}%
+                                        {% else %}
+                                            Не настроена / нет датчика влажности
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="result-item">
+                                    <div class="result-label">Свет</div>
+                                    <div class="result-value">
+                                        {% if notification.payload.manual_settings.light_on %}
+                                            Включить, освещённость {{ notification.payload.manual_settings.light_level }}%
+                                        {% else %}
+                                            Не включать
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if notification.payload.manual_settings.light_on %}
+                                    <div class="result-item">
+                                        <div class="result-label">Время работы света</div>
+                                        <div class="result-value">
+                                            Свет включится в {{ notification.payload.manual_settings.light_start }}
+                                            и выключится в {{ notification.payload.manual_settings.light_end }}.
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="result-item">
+                                    <div class="result-label">Кондиционер</div>
+                                    <div class="result-value">
+                                        {% if notification.payload.manual_settings.conditioner_on %}
+                                            Включить
+                                        {% else %}
+                                            Не включать
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if notification.payload.manual_settings.conditioner_on %}
+                                    <div class="result-item">
+                                        <div class="result-label">Время работы кондиционера</div>
+                                        <div class="result-value">
+                                            Кондиционер включится в {{ notification.payload.manual_settings.conditioner_start }}
+                                            и выключится в {{ notification.payload.manual_settings.conditioner_end }}.
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="result-item">
+                                    <div class="result-label">Окна</div>
+                                    <div class="result-value">
+                                        {% if notification.payload.manual_settings.window_state == "open" %}
+                                            Открыть
+                                        {% elif notification.payload.manual_settings.window_state == "close" %}
+                                            Закрыть
+                                        {% elif notification.payload.manual_settings.window_state == "algorithm" %}
+                                            Настроены алгоритмом
+                                        {% else %}
+                                            Не менять
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if notification.payload.manual_settings.window_state == "open" %}
+                                <div class="result-item">
+                                    <div class="result-label">Проветривание</div>
+                                    <div class="result-value">
+                                        Окна откроются в {{ notification.payload.manual_settings.window_start }}
+                                        и закроются в {{ notification.payload.manual_settings.window_end }}.
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if notification.payload.manual_settings.window_state == "close" %}
+                                <div class="result-item">
+                                    <div class="result-label">Окна</div>
+                                    <div class="result-value">
+                                        Окна будут закрыты к началу пары ({{ notification.payload.manual_settings.window_end }}).
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if notification.payload.manual_settings.temperature_control_by_algorithm %}
+                                    <div class="result-item">
+                                        <div class="result-label">Достижение температуры</div>
+                                        <div class="result-value">
+                                            Температуру обеспечит алгоритм: он сам решит, включить кондиционер или использовать окна.
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% if notification.payload.manual_settings.algorithm_for_missing %}
+                                    <div class="result-item">
+                                        <div class="result-label">Незаполненные параметры</div>
+                                        <div class="result-value">
+                                            Настроены алгоритмом:
+                                            {% for field in notification.payload.manual_settings.missing_handled_by_algorithm %}
+                                                {{ field }}{% if not forloop.last %}, {% endif %}
+                                            {% empty %}
+                                                нет
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% if notification.payload.manual_settings.algorithm_details %}
+                                    <div class="result-item">
+                                        <div class="result-label">Что алгоритм настроил сам</div>
+                                        <div class="result-value">
+                                            {% for key, value in notification.payload.manual_settings.algorithm_details.items %}
+                                                <div>{{ value }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="result-item">
+                                    <div class="result-label">Оснащение кабинета</div>
+                                    <div class="result-value">
+                                        Кондиционеров — {{ notification.payload.manual_settings.room_conditioners }},
+                                        окон — {{ notification.payload.manual_settings.room_windows }},
+                                        ПК — {{ notification.payload.manual_settings.room_computers }}.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="actions">
+                        <a href="{% url 'university:notification_manual_form' notification.id %}" class="button-link">
+                            Настроить вручную
+                        </a>
+
+                        <button
+                            type="button"
+                            onclick="openAlgorithmModal('{{ notification.id }}', '{{ notification.recommended_temperature }}')"
+                        >
+                            Оставить алгоритму
+                        </button>
+
+                        {% if mode == "hidden" %}
+                            <form method="post" action="{% url 'university:notification_restore' notification.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="button-muted">
+                                    Сделать актуальным
+                                </button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'university:notification_read' notification.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="button-muted">
+                                    Скрыть
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <div class="empty">
+            <h2>
+                {% if mode == "hidden" %}
+                    Скрытых уведомлений нет
+                {% else %}
+                    Актуальных уведомлений нет
+                {% endif %}
+            </h2>
+
+        </div>
+    {% endif %}
 </div>
+
+<div id="algorithmModal" class="modal-overlay">
+    <div class="modal-window">
+        <h2>Настройка алгоритмом</h2>
+
+        <div class="notes">
+            Алгоритм подготовит кабинет перед занятием с учётом доступных датчиков,
+            кондиционеров, окон, компьютеров и количества мест.
+        </div>
+
+        <ul>
+            <li>Температура будет выставлена по рекомендации системы: <b id="modalTemp"></b> °C.</li>
+            <li>Свет будет настроен на нужную освещённость и работать во время пары.</li>
+            <li>Кондиционер будет включён только если он есть в кабинете.</li>
+            <li>Окна будут открыты для проветривания только если они указаны в модели кабинета.</li>
+            <li>Подготовка начинается максимум за 10 минут до пары.</li>
+            <li>Если 10 минут недостаточно, система может завершить подготовку в первые 5 минут занятия.</li>
+        </ul>
+
+        <div class="modal-actions">
+            <form id="algorithmForm" method="post">
+                {% csrf_token %}
+                <button type="submit">
+                    Закрыть и оставить алгоритм
+                </button>
+            </form>
+
+            <a id="manualLink" href="#" class="button-link">
+                Поменять вручную
+            </a>
+
+            <button type="button" class="button-muted" onclick="closeAlgorithmModal()">
+                Отмена
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openAlgorithmModal(notificationId, temperature) {
+        const modal = document.getElementById("algorithmModal");
+        const form = document.getElementById("algorithmForm");
+        const manualLink = document.getElementById("manualLink");
+        const modalTemp = document.getElementById("modalTemp");
+
+        form.action = `/notifications/${notificationId}/algorithm/`;
+        manualLink.href = `/notifications/${notificationId}/manual-form/`;
+        modalTemp.innerText = temperature;
+
+        modal.style.display = "flex";
+    }
+
+    function closeAlgorithmModal() {
+        document.getElementById("algorithmModal").style.display = "none";
+    }
+</script>
 {% endblock %}

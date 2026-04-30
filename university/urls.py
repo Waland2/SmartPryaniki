@@ -16,7 +16,7 @@ urlpatterns = [
 
     path("notifications/", notification_views.notifications_page, name="notifications"),
     path("notifications/<int:pk>/read/", notification_views.mark_notification_read, name="notification_read"),
-    path("notifications/<int:pk>/manual/", notification_views.choose_manual_setup, name="notification_manual"),
     path("notifications/<int:pk>/algorithm/", notification_views.choose_algorithm_setup, name="notification_algorithm"),
     path("notifications/<int:pk>/manual-form/", notification_views.manual_setup_form, name="notification_manual_form"),
+    path("notifications/<int:pk>/restore/", notification_views.restore_notification, name="notification_restore"),
 ]

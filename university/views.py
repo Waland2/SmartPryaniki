@@ -11,6 +11,12 @@ from .models import Room, SensorData, ClimateActionLog
 from .climate_services import get_room_climate_snapshot
 from api_client import APIClient
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
+
+from .models import TeacherNotification, Room, Sensor
 
 PAIR_TIMES = {
     "1": "9:00-10:30",

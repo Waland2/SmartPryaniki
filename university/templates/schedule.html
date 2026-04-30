@@ -678,4 +678,87 @@
         }
     });
 </script>
+
+{% if popup_notifications %}
+<div id="loginPopup" class="login-popup-overlay">
+    <div class="login-popup-window">
+        <h2>Новые уведомления</h2>
+
+        {% for notification in popup_notifications %}
+            <div class="login-popup-card">
+                <b>{{ notification.title }}</b>
+                <p>{{ notification.message }}</p>
+                <p>
+                    Кабинет: {{ notification.room_name }}<br>
+                    Дата: {{ notification.lesson_date }}<br>
+                    Пара: {{ notification.lesson_number }}
+                </p>
+            </div>
+        {% endfor %}
+
+        <div class="login-popup-actions">
+            <a href="{% url 'university:notifications' %}" class="popup-btn-main">
+                Перейти к уведомлениям
+            </a>
+
+            <button onclick="document.getElementById('loginPopup').style.display='none'" class="popup-btn-muted">
+                Закрыть
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.login-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.login-popup-window {
+    background: white;
+    width: min(560px, 92vw);
+    border-radius: 18px;
+    padding: 24px;
+}
+
+.login-popup-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 14px;
+    margin: 12px 0;
+}
+
+.login-popup-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.popup-btn-main,
+.popup-btn-muted {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.popup-btn-main {
+    background: #2563eb;
+    color: white;
+}
+
+.popup-btn-muted {
+    background: #e5e7eb;
+    color: #111827;
+}
+</style>
+{% endif %}
+
 {% endblock %}

@@ -1,115 +1,825 @@
 {% extends "layout.html" %}
 
-{% block title %}Ручная настройка среды{% endblock %}
+{% block title %}Ручная настройка{% endblock %}
 
 {% block extra_styles %}
 <style>
-    body { font-family: "Segoe UI", sans-serif; background: #eef2f7; margin: 0; }
+    :root {
+        --bg: #eef2f7;
+        --panel: #ffffff;
+        --line: #dbe3ee;
+        --text: #1f2937;
+        --muted: #64748b;
+        --gold-soft: #e9efff;
+        --accent: #4338ca;
+        --shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+        --radius: 24px;
+    }
 
-    .page { max-width: 760px; margin: 32px auto; padding: 0 20px; }
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: radial-gradient(circle at top left, #f8fbff 0%, var(--bg) 52%, #e7eef8 100%);
+        color: var(--text);
+    }
+
+    .page {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 28px 24px 34px;
+    }
+
+    .hero,
+    .content {
+        display: grid;
+        grid-template-columns: 1.618fr 1fr;
+        gap: 24px;
+    }
+
+    .content {
+        margin-top: 24px;
+        align-items: start;
+    }
 
     .card {
-        background: #fff;
-        border-radius: 18px;
-        padding: 24px;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
-        border: 1px solid #dbe3ee;
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
+        border: 1px solid rgba(79, 70, 229, 0.12);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 28px;
     }
 
-    label { display: block; margin: 16px 0 8px; color: #475569; font-weight: 700; }
+    .hero-card {
+        min-height: 240px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
 
-    input[type="number"] {
+    .eyebrow {
+        display: inline-flex;
+        padding: 9px 14px;
+        border-radius: 999px;
+        background: var(--gold-soft);
+        color: var(--accent);
+        font-weight: 700;
+    }
+
+    h1, h2 { margin: 0; }
+
+    h1 {
+        margin-top: 18px;
+        font-size: clamp(38px, 5vw, 58px);
+        line-height: 1.02;
+    }
+
+    h2 { font-size: 28px; }
+
+    .notes {
+        margin-top: 14px;
+        color: var(--muted);
+        line-height: 1.6;
+    }
+
+    .chips {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+
+    .chip {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        color: var(--accent);
+        font-weight: 600;
+    }
+
+    .metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .metric {
+        min-height: 112px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .metric-title {
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    .metric-value {
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+    .metric-note {
+        color: var(--accent);
+    }
+
+    .form-grid {
+        display: grid;
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .field {
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: #ffffff;
+    }
+
+    .field.disabled {
+        background: #f1f5f9;
+        color: #94a3b8;
+    }
+
+    .field.has-error {
+        border-color: #ef4444;
+        background: #fff1f2;
+    }
+
+    .field.has-error .hint {
+        color: #b91c1c;
+        font-weight: 700;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    input,
+    select {
         width: 100%;
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid #cbd5e1;
-        box-sizing: border-box;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        color: var(--text);
+        font: inherit;
     }
 
-    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+    input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+    }
+
+    input:disabled,
+    select:disabled {
+        background: #e5e7eb;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    .checkbox-label {
+        color: var(--text);
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .hint {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .sidebar-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .info-box {
+        background: #f8fbff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+    }
+
+    .info-title {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .info-value {
+        margin-top: 10px;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+    .message {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: #eff6ff;
+        border: 1px solid rgba(59, 130, 246, 0.35);
+        color: #1d4ed8;
+        font-weight: 700;
+    }
+
+    .actions {
+        margin-top: 24px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
 
     button,
-    a {
+    .button-link {
+        padding: 14px 18px;
         border: none;
-        border-radius: 12px;
-        padding: 12px 16px;
+        background: linear-gradient(135deg, #4f46e5, #4338ca);
+        color: white;
+        border-radius: 16px;
         cursor: pointer;
-        font-weight: 700;
+        transition: 0.2s;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 24px rgba(79, 70, 229, 0.22);
+        font-weight: 800;
+        font: inherit;
     }
 
-    .primary { background: #4f46e5; color: #fff; }
-    .ghost { background: #f8fafc; color: #334155; border: 1px solid #dbe3ee; }
-    .meta { color: #64748b; margin-top: 8px; line-height: 1.6; }
-    .checkbox { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
-    .checkbox input { width: auto; }
-    .flash { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px 14px; border-radius: 12px; margin-bottom: 16px; }
+    .button-muted {
+        background: #e5e7eb;
+        color: #111827;
+        box-shadow: none;
+    }
 
-    .hint {
-        margin-top: 12px;
-        padding: 12px 14px;
-        border-radius: 12px;
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        color: #1d4ed8;
-        line-height: 1.6;
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.48);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .modal-window {
+        background: #ffffff;
+        max-width: 560px;
+        width: 100%;
+        padding: 28px;
+        border-radius: 24px;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.25);
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+    }
+
+    @media (max-width: 1100px) {
+        .hero,
+        .content {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .page { padding-left: 16px; padding-right: 16px; }
+        .metrics, .sidebar-grid { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page">
-    <div class="card">
-        <h1 style="margin-top: 0;">Ручная настройка среды</h1>
-        <div class="meta">{{ item.title }}</div>
-        <div class="meta">Кабинет: {{ item.room_name }} · Дата: {{ item.lesson_date }} · Пара: {{ item.lesson_number }}</div>
-        <div class="meta">{{ item.message }}</div>
+    <section class="hero">
+        <div class="card hero-card">
+            <div>
+                <div class="eyebrow">Ручная настройка</div>
+                <h1>Настройка среды</h1>
+                <div class="notes">
+                    Заполните параметры вручную. Если часть параметров оставить пустыми,
+                    система предложит настроить их вручную или доверить алгоритму.
+                </div>
+            </div>
 
-        <div class="hint">
-            Сейчас ручная настройка работает через систему датчиков кабинета. Можно задать температуру,
-            влажность, свет и состояние кондиционера. Отдельное управление окнами, вентиляцией и отоплением
-            пока не реализовано, поэтому без этих механизмов физически изменить температуру невозможно.
+            <div class="chips">
+                <div class="chip">Кабинет: {{ item.room_name }}</div>
+                <div class="chip">Дата: {{ item.lesson_date }}</div>
+                <div class="chip">Пара: {{ item.lesson_number }}</div>
+            </div>
         </div>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="flash">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-
-        <form method="post">
-            {% csrf_token %}
-
-            <label>Температура, °C</label>
-            <input
-                type="number"
-                name="temperature"
-                step="0.1"
-                min="{{ item.temperature_min|default:'18' }}"
-                max="{{ item.temperature_max|default:'26' }}"
-                value="{{ item.recommended_temperature|default:'' }}"
-            >
-
-            <label>Влажность, %</label>
-            <input type="number" name="humidity" step="0.1" min="30" max="70" value="45">
-
-            <label class="checkbox">
-                <input type="checkbox" name="light_on" checked>
-                <span>Включить свет</span>
-            </label>
-
-            <label class="checkbox">
-                <input type="checkbox" name="conditioner_on">
-                <span>Включить кондиционер</span>
-            </label>
-
-            <div class="row">
-                <button class="primary" type="submit">Сохранить и применить</button>
-                <a class="ghost" href="{% url 'university:notifications' %}">Назад к уведомлениям</a>
+        <div class="metrics">
+            <div class="card metric">
+                <div class="metric-title">Кондиционеры</div>
+                <div class="metric-value">{% if room %}{{ room.conditioners }}{% else %}—{% endif %}</div>
+                <div class="metric-note">По модели кабинета</div>
             </div>
-        </form>
+            <div class="card metric">
+                <div class="metric-title">Окна</div>
+                <div class="metric-value">{% if room %}{{ room.windows }}{% else %}—{% endif %}</div>
+                <div class="metric-note">Можно открыть или закрыть</div>
+            </div>
+            <div class="card metric">
+                <div class="metric-title">Компьютеры</div>
+                <div class="metric-value">{% if room %}{{ room.computers }}{% else %}—{% endif %}</div>
+                <div class="metric-note">Влияют на тепло</div>
+            </div>
+            <div class="card metric">
+                <div class="metric-title">Стулья</div>
+                <div class="metric-value">{% if room %}{{ room.chairs }}{% else %}—{% endif %}</div>
+                <div class="metric-note">Оценка размера аудитории</div>
+            </div>
+        </div>
+    </section>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% if messages %}
+    <script>
+        window.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".manual-required").forEach(function (field) {
+                const value = field.value;
+                if (value && !field.checkValidity()) {
+                    const wrapper = field.closest(".field");
+                    if (wrapper) wrapper.classList.add("has-error");
+                }
+            });
+        });
+    </script>
+    {% endif %}
+
+    <section class="content">
+        <div class="card">
+            <h2>Параметры среды</h2>
+            <div class="notes">
+                Сохранённые ранее значения автоматически подставляются при повторном открытии формы.
+            </div>
+
+            <form method="post" id="manualSetupForm" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="algorithm_for_missing" id="algorithmForMissing" value="0">
+
+                <div class="form-grid">
+                    <div class="field {% if not capabilities.temperature %}disabled{% endif %}">
+                        <label>Температура, °C</label>
+                        <input
+                            type="number"
+                            name="temperature"
+                            class="manual-required"
+                            data-field-label="Температура"
+                            step="0.5"
+                            min="{{ item.temperature_min|default:'18' }}"
+                            max="{{ item.temperature_max|default:'26' }}"
+                            value="{{ manual_settings.temperature|default:'' }}"
+                            placeholder="{{ item.recommended_temperature|default:'22' }}"
+                            {% if not capabilities.temperature %}disabled{% endif %}
+                        >
+                        <div class="hint">
+                            {% if capabilities.temperature %}
+                                Диапазон: {{ item.temperature_min|default:'18' }}–{{ item.temperature_max|default:'26' }}°C.
+                                Если указываете температуру, выберите кондиционер и/или окна.
+                            {% else %}
+                                В этом кабинете нет датчика температуры.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="field {% if not capabilities.humidity %}disabled{% endif %}">
+                        <label>Влажность, %</label>
+                        <input
+                            type="number"
+                            name="humidity"
+                            class="manual-required"
+                            data-field-label="Влажность"
+                            min="30"
+                            max="70"
+                            value="{{ manual_settings.humidity|default:'' }}"
+                            placeholder="45"
+                            {% if not capabilities.humidity %}disabled{% endif %}
+                        >
+                        <div class="hint">
+                            {% if capabilities.humidity %}
+                                Диапазон влажности: 30–70%.
+                            {% else %}
+                                В этом кабинете нет датчика влажности.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="field {% if not capabilities.light %}disabled{% endif %}">
+                        <label class="checkbox-label">
+                            <input
+                                type="checkbox"
+                                name="light_on"
+                                id="lightOnCheckbox"
+                                {% if manual_settings.light_on %}checked{% endif %}
+                                {% if not capabilities.light %}disabled{% endif %}
+                                onchange="toggleLightLevel()"
+                            >
+                            Включить свет
+                        </label>
+
+                        <label style="margin-top: 14px;">Освещённость, %</label>
+                        <input
+                            type="number"
+                            name="light_level"
+                            id="lightLevelInput"
+                            class="manual-required"
+                            data-field-label="Освещённость"
+                            min="0"
+                            max="100"
+                            value="{{ manual_settings.light_level|default:'' }}"
+                            placeholder="80"
+                            {% if not capabilities.light %}disabled{% endif %}
+                        >
+
+                        <label style="margin-top: 14px;">Включить свет в</label>
+                        <input
+                            type="time"
+                            name="light_start"
+                            value="{{ manual_settings.light_start|default:time_limits.lesson_start }}"
+                            min="{{ time_limits.lesson_start }}"
+                            max="{{ time_limits.lesson_end }}"
+                            {% if not capabilities.light %}disabled{% endif %}
+                        >
+
+                        <label style="margin-top: 14px;">Выключить свет в</label>
+                        <input
+                            type="time"
+                            name="light_end"
+                            value="{{ manual_settings.light_end|default:time_limits.lesson_end }}"
+                            min="{{ time_limits.lesson_start }}"
+                            max="{{ time_limits.lesson_end }}"
+                            {% if not capabilities.light %}disabled{% endif %}
+                        >
+
+                        <div class="hint">
+                            {% if capabilities.light %}
+                                Свет можно включать только во время пары:
+                                {{ time_limits.lesson_start }}–{{ time_limits.lesson_end }}.
+                            {% else %}
+                                В этом кабинете нет датчика/управления светом.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="field {% if not capabilities.conditioner %}disabled{% endif %}">
+                        <label class="checkbox-label">
+                            <input
+                                type="checkbox"
+                                name="conditioner_on"
+                                id="conditionerOnCheckbox"
+                                {% if manual_settings.conditioner_on %}checked{% endif %}
+                                {% if not capabilities.conditioner %}disabled{% endif %}
+                            >
+                            Включить кондиционер
+                        </label>
+
+                        <label style="margin-top: 14px;">Включить кондиционер в</label>
+                        <input
+                            type="time"
+                            name="conditioner_start"
+                            value="{{ manual_settings.conditioner_start|default:time_limits.preparation_start }}"
+                            min="{{ time_limits.preparation_start }}"
+                            max="{{ time_limits.lesson_end }}"
+                            {% if not capabilities.conditioner %}disabled{% endif %}
+                        >
+
+                        <label style="margin-top: 14px;">Выключить кондиционер в</label>
+                        <input
+                            type="time"
+                            name="conditioner_end"
+                            value="{{ manual_settings.conditioner_end|default:time_limits.lesson_start }}"
+                            min="{{ time_limits.preparation_start }}"
+                            max="{{ time_limits.lesson_end }}"
+                            {% if not capabilities.conditioner %}disabled{% endif %}
+                        >
+
+                        <div class="hint">
+                            {% if capabilities.conditioner %}
+                                Кондиционер можно включать с {{ time_limits.preparation_start }}
+                                до {{ time_limits.lesson_end }}.
+                            {% else %}
+                                В этом кабинете нет кондиционера.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="field {% if not capabilities.windows %}disabled{% endif %}">
+                        <label>Окна</label>
+                        <select
+                            name="window_state"
+                            class="manual-required"
+                            data-field-label="Окна"
+                            {% if not capabilities.windows %}disabled{% endif %}
+                        >
+                            <option value="" {% if not manual_settings.window_state %}selected{% endif %}>Не выбрано</option>
+                            <option value="open" {% if manual_settings.window_state == "open" %}selected{% endif %}>Открыть окна</option>
+                            <option value="close" {% if manual_settings.window_state == "close" %}selected{% endif %}>Закрыть окна</option>
+                        </select>
+
+                        <label style="margin-top: 14px;">Открыть окна в</label>
+                        <input
+                            type="time"
+                            name="window_start"
+                            value="{{ manual_settings.window_start|default:time_limits.preparation_start }}"
+                            min="{{ time_limits.preparation_start }}"
+                            max="{{ time_limits.lesson_end }}"
+                            {% if not capabilities.windows %}disabled{% endif %}
+                        >
+
+                        <label style="margin-top: 14px;">Закрыть окна в</label>
+                        <input
+                            type="time"
+                            name="window_end"
+                            value="{{ manual_settings.window_end|default:time_limits.lesson_start }}"
+                            min="{{ time_limits.preparation_start }}"
+                            max="{{ time_limits.lesson_end }}"
+                            {% if not capabilities.windows %}disabled{% endif %}
+                        >
+
+                        <div class="hint">
+                            {% if capabilities.windows %}
+                                Окна можно открывать с {{ time_limits.preparation_start }}
+                                до {{ time_limits.lesson_end }}.
+                            {% else %}
+                                В этом кабинете нет окон.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="field {% if not capabilities.co2 %}disabled{% endif %}">
+                        <label>CO₂</label>
+                        <input
+                            type="text"
+                            value="{% if capabilities.co2 %}Контроль по датчику включён{% else %}Датчик отсутствует{% endif %}"
+                            disabled
+                        >
+                        <div class="hint">
+                            {% if capabilities.co2 %}
+                                CO₂ контролируется автоматически, вручную не настраивается.
+                            {% else %}
+                                В этом кабинете нет датчика CO₂.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="submit">Сохранить настройку</button>
+
+                    <a href="{% url 'university:notifications' %}" class="button-link button-muted">
+                        Назад
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Данные занятия</h2>
+
+            <div class="sidebar-grid">
+                <div class="info-box">
+                    <div class="info-title">Кабинет</div>
+                    <div class="info-value">{{ item.room_name }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-title">Дата</div>
+                    <div class="info-value">{{ item.lesson_date }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-title">Пара</div>
+                    <div class="info-value">{{ item.lesson_number }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-title">Предмет</div>
+                    <div class="info-value">{{ item.subject_name }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-title">Группа</div>
+                    <div class="info-value">{{ item.group_name }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-title">Рекомендуемая температура</div>
+                    <div class="info-value">{{ item.recommended_temperature }} °C</div>
+                </div>
+            </div>
+
+            <div class="notes">
+                Ограничение температуры:
+                {{ item.temperature_min|default:'18' }}–{{ item.temperature_max|default:'26' }} °C.
+            </div>
+
+            <div class="notes">
+                Допустимое время настройки:
+                кондиционер и окна — с {{ time_limits.preparation_start }} до {{ time_limits.lesson_end }},
+                свет — с {{ time_limits.lesson_start }} до {{ time_limits.lesson_end }}.
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="missingFieldsModal" class="modal-overlay">
+    <div class="modal-window">
+        <h2>Не все параметры настроены</h2>
+
+        <div class="notes">
+            Вы оставили часть доступных параметров пустыми или указали температуру,
+            но не выбрали способ её достижения. Можно вернуться и настроить это вручную
+            или оставить незаполненные параметры алгоритму.
+        </div>
+
+        <div id="missingFieldsList" class="notes"></div>
+
+        <div class="modal-actions">
+            <button type="button" onclick="highlightMissingFields()">
+                Настроить оставшееся
+            </button>
+
+            <button type="button" onclick="submitWithAlgorithmForMissing()">
+                Оставить алгоритму
+            </button>
+
+            <button type="button" class="button-muted" onclick="closeMissingModal()">
+                Отмена
+            </button>
+        </div>
     </div>
 </div>
+
+<script>
+    function getMissingFields() {
+        const fields = document.querySelectorAll(".manual-required");
+        const missing = [];
+
+        fields.forEach(function(field) {
+            if (field.disabled) return;
+
+            const wrapper = field.closest(".field");
+            const label = field.dataset.fieldLabel || "Поле";
+
+            if (field.name === "light_level") {
+                const checkbox = document.getElementById("lightOnCheckbox");
+                if (!checkbox || !checkbox.checked) return;
+            }
+
+            if (!field.value || field.value.trim() === "") {
+                missing.push({ field: field, wrapper: wrapper, label: label });
+            }
+        });
+
+        const temperatureInput = document.querySelector('[name="temperature"]');
+        const conditionerInput = document.querySelector('[name="conditioner_on"]');
+        const windowSelect = document.querySelector('[name="window_state"]');
+
+        if (
+            temperatureInput &&
+            !temperatureInput.disabled &&
+            temperatureInput.value.trim() !== ""
+        ) {
+            const conditionerAvailable = conditionerInput && !conditionerInput.disabled;
+            const windowsAvailable = windowSelect && !windowSelect.disabled;
+
+            const conditionerChosen = conditionerInput && conditionerInput.checked;
+            const windowChosen = windowSelect && windowSelect.value.trim() !== "";
+
+            if (
+                (conditionerAvailable || windowsAvailable) &&
+                !conditionerChosen &&
+                !windowChosen
+            ) {
+                if (conditionerAvailable) {
+                    missing.push({
+                        field: conditionerInput,
+                        wrapper: conditionerInput.closest(".field"),
+                        label: "Способ изменения температуры: кондиционер"
+                    });
+                }
+
+                if (windowsAvailable) {
+                    missing.push({
+                        field: windowSelect,
+                        wrapper: windowSelect.closest(".field"),
+                        label: "Способ изменения температуры: окна"
+                    });
+                }
+            }
+        }
+
+        return missing;
+    }
+
+    function openMissingModal(missing) {
+        const modal = document.getElementById("missingFieldsModal");
+        const list = document.getElementById("missingFieldsList");
+
+        list.innerHTML = "<b>Нужно уточнить:</b><br>" + missing.map(item => "• " + item.label).join("<br>");
+        modal.style.display = "flex";
+    }
+
+    function closeMissingModal() {
+        document.getElementById("missingFieldsModal").style.display = "none";
+    }
+
+    function highlightMissingFields() {
+        const missing = getMissingFields();
+
+        document.querySelectorAll(".field").forEach(function(field) {
+            field.classList.remove("has-error");
+        });
+
+        missing.forEach(function(item) {
+            if (item.wrapper) item.wrapper.classList.add("has-error");
+        });
+
+        closeMissingModal();
+
+        if (missing.length > 0) {
+            missing[0].field.scrollIntoView({ behavior: "smooth", block: "center" });
+            missing[0].field.focus();
+        }
+    }
+
+    function submitWithAlgorithmForMissing() {
+        document.getElementById("algorithmForMissing").value = "1";
+        document.getElementById("manualSetupForm").submit();
+    }
+
+    function toggleLightLevel() {
+        const checkbox = document.getElementById("lightOnCheckbox");
+        const input = document.getElementById("lightLevelInput");
+
+        if (!checkbox || !input) return;
+
+        input.disabled = !checkbox.checked;
+
+        if (!checkbox.checked) {
+            input.value = "";
+            input.closest(".field").classList.remove("has-error");
+        } else if (input.value === "0") {
+            input.value = "";
+        }
+    }
+
+    document.getElementById("manualSetupForm").addEventListener("submit", function(event) {
+        const algorithmForMissing = document.getElementById("algorithmForMissing").value;
+
+        if (algorithmForMissing === "1") return;
+
+        const missing = getMissingFields();
+
+        if (missing.length > 0) {
+            event.preventDefault();
+            openMissingModal(missing);
+        }
+    });
+
+    toggleLightLevel();
+</script>
+<script>
+    function toggleWindowTimeFields() {
+        const select = document.querySelector('[name="window_state"]');
+        const startInput = document.querySelector('[name="window_start"]');
+        const endInput = document.querySelector('[name="window_end"]');
+
+        if (!select || !startInput || !endInput) return;
+
+        const showTime = select.value === "open";
+
+        startInput.disabled = !showTime;
+        endInput.disabled = !showTime;
+
+        startInput.closest("label").style.display = showTime ? "block" : "none";
+        endInput.closest("label").style.display = showTime ? "block" : "none";
+
+        startInput.style.display = showTime ? "block" : "none";
+        endInput.style.display = showTime ? "block" : "none";
+    }
+
+    document.querySelector('[name="window_state"]').addEventListener("change", toggleWindowTimeFields);
+    toggleWindowTimeFields();
+</script>
 {% endblock %}
