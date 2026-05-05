@@ -1,13 +1,14 @@
+from datetime import datetime
+
 from django.utils import timezone
-from .models import RoomLesson
-from .models import Room
-from datetime import timedelta
+
+from .models import Room, RoomLesson
 
 
 def get_first_upcoming_lesson_for_room(room):
     now = timezone.localtime()
 
-    lesson = (
+    return (
         RoomLesson.objects.filter(
             room=room,
             lesson_date=now.date(),
@@ -18,22 +19,25 @@ def get_first_upcoming_lesson_for_room(room):
         .first()
     )
 
-    return lesson
 
 def is_time_to_prepare(lesson):
     now = timezone.localtime()
 
-    lesson_dt = timezone.make_aware(
-        timezone.datetime.combine(
-            lesson.lesson_date,
-            lesson.start_time
-        )
+    lesson_datetime = datetime.combine(
+        lesson.lesson_date,
+        lesson.start_time,
     )
 
-    delta = lesson_dt - now
-    minutes = delta.total_seconds() / 60
+    lesson_datetime = timezone.make_aware(
+        lesson_datetime,
+        timezone.get_current_timezone(),
+    )
 
-    return 0 <= minutes <= 15
+    delta = lesson_datetime - now
+    minutes_left = delta.total_seconds() / 60
+
+    return 0 <= minutes_left <= 15
+
 
 def get_rooms_to_prepare():
     result = []

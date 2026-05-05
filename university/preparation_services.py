@@ -65,13 +65,12 @@ def choose_climate_action(snapshot, outdoor_weather):
 
     return {
         "action": "none",
-        "reason": "Параметры в норме, вмешательство не требуется",
+        "reason": "Показатели микроклимата в норме, окно закрыто, кондиционер выключен",
     }
 
 
 def apply_climate_action(room, decision):
     action = decision["action"]
-
     active_conditioners = room.conditioner_set.filter(status="active")
 
     if action == "ventilation":
@@ -98,18 +97,6 @@ def apply_climate_action(room, decision):
 
 
 def prepare_room_for_lesson(room, lesson, outdoor_weather=None):
-    already_done = ClimateActionLog.objects.filter(
-        room=room,
-        lesson_date=lesson.lesson_date,
-        lesson_time=lesson.start_time,
-    ).exists()
-
-    if already_done:
-        return {
-            "status": "skipped",
-            "reason": "Подготовка для этой пары уже выполнялась",
-        }
-
     room.simulate_sensors()
     snapshot = get_room_climate_snapshot(room)
 
