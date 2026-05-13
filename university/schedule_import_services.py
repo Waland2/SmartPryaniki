@@ -1,5 +1,6 @@
 import datetime
 import re
+from django.utils import timezone
 
 from accounts.models import UserProfile
 from api_client import APIClient
@@ -290,5 +291,41 @@ def import_lessons_for_all_teachers(days_ahead=14):
         stats["skipped"] += result["skipped"]
         stats["errors"] += result["errors"]
         stats["results"].append(result)
+
+    return stats
+def sync_schedule(days_ahead=14, keep_past_days=7):
+    """
+    Полная синхронизация расписания с API.
+
+    Загружает расписание на ближайшие days_ahead дней.
+    Старые занятия удаляет.
+    Неактуальные занятия помечает отменёнными.
+    """
+
+    sync_started_at = timezone.now()
+
+    stats = import_lessons_for_all_teachers(days_ahead=days_ahead)
+
+    today = timezone.localdate()
+    max_date = today + datetime.timedelta(days=days_ahead)
+    old_border = today - datetime.timedelta(days=keep_past_days)
+
+    cancelled_stale = RoomLesson.objects.filter(
+        source="teacher_api",
+        lesson_date__gte=today,
+        lesson_date__lte=max_date,
+        is_cancelled=False,
+        updated_at__lt=sync_started_at,
+    ).update(is_cancelled=True)
+
+    deleted_old, _ = RoomLesson.objects.filter(
+        source="teacher_api",
+        lesson_date__lt=old_border,
+    ).delete()
+
+    stats["cancelled_stale"] = cancelled_stale
+    stats["deleted_old"] = deleted_old
+    stats["days_ahead"] = days_ahead
+    stats["keep_past_days"] = keep_past_days
 
     return stats

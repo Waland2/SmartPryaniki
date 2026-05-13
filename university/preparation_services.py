@@ -76,24 +76,40 @@ def apply_climate_action(room, decision):
     if action == "ventilation":
         room.window_open = True
         room.save(update_fields=["window_open"])
-        active_conditioners.update(enabled=False, mode="off")
+        active_conditioners.update(
+            enabled=False,
+            mode="off",
+            target_temperature=None,
+        )
         return
 
     if action == "conditioner_cool":
         room.window_open = False
         room.save(update_fields=["window_open"])
-        active_conditioners.update(enabled=True, mode="cool")
+        active_conditioners.update(
+            enabled=True,
+            mode="cool",
+            target_temperature=22,
+        )
         return
 
     if action == "conditioner_heat":
         room.window_open = False
         room.save(update_fields=["window_open"])
-        active_conditioners.update(enabled=True, mode="heat")
+        active_conditioners.update(
+            enabled=True,
+            mode="heat",
+            target_temperature=22,
+        )
         return
 
     room.window_open = False
     room.save(update_fields=["window_open"])
-    active_conditioners.update(enabled=False, mode="off")
+    active_conditioners.update(
+        enabled=False,
+        mode="off",
+        target_temperature=None,
+    )
 
 
 def prepare_room_for_lesson(room, lesson, outdoor_weather=None):
