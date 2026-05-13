@@ -17,6 +17,19 @@ from university.preparation_services import choose_climate_action, prepare_room_
 from university.schedule_services import is_time_to_prepare
 
 
+def make_schedule_pair(group_number="241-362"):
+    return {
+        "subject": {"name": "Math"},
+        "subject_type": {"type": "Lecture"},
+        "location": {"name": "Campus"},
+        "teachers": [{"full_name": "Teacher Test"}],
+        "rooms": [{"number": "101"}],
+        "group": {"number": group_number},
+        "start_date": "2026-05-11",
+        "end_date": "2026-05-17",
+    }
+
+
 class ClimateRulesTests(TestCase):
     def test_bad_weather_when_outdoor_too_cold(self):
         self.assertTrue(
@@ -138,6 +151,52 @@ class ScheduleWindowTests(TestCase):
             end_time=end_dt.time().replace(microsecond=0),
         )
         self.assertTrue(is_time_to_prepare(lesson))
+
+
+class SchedulePageDayFilterTests(TestCase):
+    @patch("university.views.APIClient.get_schedule")
+    def test_day_selector_filters_schedule_to_selected_day(self, mock_get_schedule):
+        mock_get_schedule.return_value = {
+            "result": {
+                "monday": {"1": [make_schedule_pair()]},
+                "wednesday": {"2": [make_schedule_pair()]},
+            }
+        }
+
+        response = self.client.get(
+            "/schedule/",
+            {
+                "group": "241-362",
+                "day": "wednesday",
+                "date_from": "2026-05-13",
+                "date_to": "2026-05-13",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([day["key"] for day in response.context["schedule"]], ["wednesday"])
+        self.assertEqual(response.context["selected_day"], "wednesday")
+
+    @patch("university.views.APIClient.get_schedule")
+    def test_date_filter_excludes_selected_day_without_matching_date(self, mock_get_schedule):
+        mock_get_schedule.return_value = {
+            "result": {
+                "monday": {"1": [make_schedule_pair()]},
+            }
+        }
+
+        response = self.client.get(
+            "/schedule/",
+            {
+                "group": "241-362",
+                "day": "monday",
+                "date_from": "2026-05-13",
+                "date_to": "2026-05-13",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context["schedule"])
 
 
 class FullPreparationTests(TestCase):

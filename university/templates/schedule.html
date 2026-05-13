@@ -331,19 +331,16 @@
 <div class="container">
     <h1>📓 Расписание</h1>
 
-    <form method="get" class="filters">
+    <form method="get" class="filters" id="scheduleFilters">
         <input type="text" name="group" placeholder="Группа (241-362)" value="{{ group|default:'' }}">
         <input type="text" name="teacher" placeholder="ФИО преподавателя" value="{{ teacher|default:'' }}">
         <input type="date" name="date_from" value="{{ date_from }}">
         <input type="date" name="date_to" value="{{ date_to }}">
-        <select name="day">
+        <select name="day" onchange="document.getElementById('scheduleFilters').submit()">
             <option value="">Все дни</option>
-            <option value="monday" {% if selected_day == "monday" %}selected{% endif %}>Понедельник</option>
-            <option value="tuesday" {% if selected_day == "tuesday" %}selected{% endif %}>Вторник</option>
-            <option value="wednesday" {% if selected_day == "wednesday" %}selected{% endif %}>Среда</option>
-            <option value="thursday" {% if selected_day == "thursday" %}selected{% endif %}>Четверг</option>
-            <option value="friday" {% if selected_day == "friday" %}selected{% endif %}>Пятница</option>
-            <option value="saturday" {% if selected_day == "saturday" %}selected{% endif %}>Суббота</option>
+            {% for day_option in day_options %}
+                <option value="{{ day_option.value }}" {% if selected_day == day_option.value %}selected{% endif %}>{{ day_option.label }}</option>
+            {% endfor %}
         </select>
 
         <button type="submit">Найти</button>

@@ -54,6 +54,11 @@ DAY_LABELS_RU = {
     "sunday": "Воскресенье",
 }
 
+DAY_OPTIONS = [
+    {"value": day_key, "label": DAY_LABELS_RU[day_key]}
+    for day_key in DAY_KEYS[:6]
+]
+
 SCHEDULE_CACHE_TTL = 300
 ROOM_INDEX_CACHE_TTL = 300
 ROOMS_CACHE_TTL = 900
@@ -244,6 +249,17 @@ def canonical_room_name(value):
 
 def parse_date_safe(value):
     return datetime.datetime.strptime(value, "%Y-%m-%d").date()
+
+
+def normalize_selected_day(value):
+    value = (value or "").strip().lower()
+    return value if value in DAY_KEYS else ""
+
+
+def date_range_contains_weekday(start_date, end_date, weekday_index):
+    days_until_weekday = (weekday_index - start_date.weekday()) % 7
+    first_matching_date = start_date + datetime.timedelta(days=days_until_weekday)
+    return first_matching_date <= end_date
 
 
 def _is_bad_api_response(data):
@@ -864,7 +880,7 @@ def room_history(request, room_id):
 
 def schedule_view(request):
     group = request.GET.get("group", "").strip()
-    selected_day = request.GET.get("day")
+    selected_day = normalize_selected_day(request.GET.get("day"))
 
     raw_teacher = request.GET.get("teacher")
     raw_date_from = request.GET.get("date_from")
@@ -969,6 +985,7 @@ def schedule_view(request):
                     continue
 
                 new_lessons = {}
+                weekday_index = DAY_KEYS.index(day) if day in DAY_KEYS else None
 
                 for number, pairs in lessons.items():
                     if pairs:
@@ -985,6 +1002,11 @@ def schedule_view(request):
 
                             if date_to_obj and start > date_to_obj:
                                 ok = False
+
+                            if ok and weekday_index is not None:
+                                range_start = max(start, date_from_obj) if date_from_obj else start
+                                range_end = min(end, date_to_obj) if date_to_obj else end
+                                ok = date_range_contains_weekday(range_start, range_end, weekday_index)
 
                             if ok:
                                 filtered_pairs.append(pair)
@@ -1018,6 +1040,7 @@ def schedule_view(request):
         "teacher": teacher,
         "today": today,
         "selected_day": selected_day,
+        "day_options": DAY_OPTIONS,
         "warning": warning,
         "date_from": date_from,
         "date_to": date_to,
