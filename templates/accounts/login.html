@@ -4,6 +4,44 @@
     <meta charset="UTF-8">
     <title>Вход</title>
     <style>
+
+/* Единый стиль как в base.html */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap");
+
+:root {
+    --bg: #3a3a3a;
+    --sidebar: #2b2b2b;
+    --card: #3b3b3b;
+    --card-2: #252b3a;
+    --text: #f0f0f0;
+    --muted: #bdbdbd;
+    --accent: #6d86e3;
+    --accent-hover: #7f98ec;
+    --ok: #94f0b9;
+    --warn: #f2c94c;
+    --bad: #e27992;
+    --border: #494949;
+    --search: #313131;
+    --radius-small: 9px;
+    --radius: 19px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    font-family: Montserrat, sans-serif;
+    line-height: 130%;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+}
+
+html, body {
+    min-height: 100%;
+    background: var(--bg) !important;
+    color: var(--text) !important;
+}
+
+a { color: inherit; }
+
+
         * {
             box-sizing: border-box;
         }
@@ -86,7 +124,155 @@
             color: #991b1b;
             font-size: 14px;
         }
-    </style>
+
+
+/* ===== Единый тёмный дизайн как в base.html ===== */
+body {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    font-family: Montserrat, sans-serif !important;
+}
+
+.page, .container, .simulate-wrap {
+    background: transparent !important;
+}
+
+.header, .topbar, .simulate-card, .day, .filters, .lesson, .empty,
+.card, .hero-card, .metric, .notification-card, .result-box, .info-box,
+.field, .slot-card, .sensor-item, .popup-card, .popup-description,
+.popup-empty, .room-popup, .modal-window, .login-popup-window,
+.notification-popup, #notification-popup {
+    background: var(--card) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+    box-shadow: none !important;
+}
+
+.header, .popup-header, .modal-window, .room-popup, .login-popup-window,
+#notification-popup, #notification-popup > div {
+    background: var(--sidebar) !important;
+    border-color: #1f1f1f !important;
+}
+
+h1, h2, h3, .brand, .notification-title, .lesson-title, .slot-title,
+.subject, .sensor-name, .info-value, .metric-value, .popup-title,
+.popup-card-value, .result-title, .result-value, strong, b {
+    color: var(--text) !important;
+}
+
+.notes, .muted, .subtitle, .metric-title, .metric-note, .info-title,
+.lesson-meta, .meta, .sensor-type, .notification-message, .popup-card-title,
+.popup-description, .result-label, label, .empty {
+    color: var(--muted) !important;
+}
+
+.nav a, .nav span, .user-trigger {
+    color: var(--text) !important;
+    border-radius: var(--radius-small) !important;
+}
+
+.nav a:hover, .nav .active, .user-trigger:hover, .user-dropdown a:hover {
+    background: #313131 !important;
+    color: var(--accent-hover) !important;
+}
+
+.user-dropdown {
+    background: var(--sidebar) !important;
+    border-color: var(--border) !important;
+}
+
+input, select, textarea {
+    background: var(--search) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-small) !important;
+    font-family: Montserrat, sans-serif !important;
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--muted) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: 1px solid var(--accent-hover) !important;
+    border-color: var(--accent-hover) !important;
+}
+
+button, .button-link, .btn, .room-link, .popup-btn-main,
+.simulate-btn, input[type="submit"] {
+    background: var(--accent) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--accent-hover) !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+    font-weight: 700 !important;
+}
+
+button:hover, .button-link:hover, .btn:hover, .room-link:hover,
+.popup-btn-main:hover, .simulate-btn:hover, input[type="submit"]:hover {
+    background: var(--accent-hover) !important;
+}
+
+.button-muted, .btn-secondary, .popup-btn-muted, .room-text,
+button.button-muted, a.button-muted {
+    background: var(--card-2) !important;
+    border-color: #333a4f !important;
+    color: var(--text) !important;
+}
+
+.chip, .badge, .pill, .badge-blue, .badge-gold, .badge-gray,
+.eyebrow, .room-link, .room-text {
+    background: var(--card-2) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--accent-hover) !important;
+}
+
+.warning, .message, .error {
+    background: rgba(242, 201, 76, 0.12) !important;
+    border: 1px solid rgba(242, 201, 76, 0.45) !important;
+    color: var(--warn) !important;
+}
+
+.notification-card.unread, .lesson-card.active, .slot-card.active,
+.day.today, .field.has-error {
+    background: #313131 !important;
+    border-color: var(--accent-hover) !important;
+}
+
+.lesson-card, .slot-card {
+    background: var(--card) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+.lesson-card:hover, .slot-card:hover, .notification-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-hover) !important;
+}
+
+.sensor-value, .lesson-time, .topbar-link, .metric-note {
+    color: var(--accent-hover) !important;
+}
+
+.status-ok, .status-active { color: var(--ok) !important; }
+.status-warn, .status-disabled { color: var(--warn) !important; }
+.status-error, .status-bad { color: var(--bad) !important; }
+
+th, td {
+    border-bottom-color: var(--border) !important;
+    color: var(--text) !important;
+}
+th { color: var(--muted) !important; }
+
+.popup-overlay, .modal-overlay, #notification-popup-overlay, .login-popup-overlay {
+    background: rgba(0, 0, 0, 0.55) !important;
+}
+
+@media (max-width: 1000px) {
+    .btn, .button-link, button { width: 100%; }
+}
+
+</style>
 </head>
 <body>
 <div class="page">
