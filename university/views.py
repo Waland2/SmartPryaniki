@@ -1126,7 +1126,7 @@ def current_day_view(request):
 
     current_pair_message = None
     if selected_date == datetime.date.today() and current_pair is None:
-        current_pair_message = "Сейчас у преподавателя нет текущей пары."
+        current_pair_message = ""
 
     context = {
         "selected_date": selected_date_str,
