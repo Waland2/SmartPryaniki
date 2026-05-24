@@ -1,53 +1,509 @@
 {% extends "dashboard/base.html" %}
 
 {% block content %}
-<div class="grid">
-    <div class="card">
-        <h3>Кабинеты</h3>
-        <div style="font-size: 32px; font-weight: 700;">{{ total_rooms }}</div>
+
+<style>
+    /* ── Stat Cards ── */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 36px;
+        animation: fadeUp 0.45s 0.05s ease both;
+    }
+
+    .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 22px 24px;
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition);
+    }
+
+    .stat-card:hover {
+        border-color: var(--border-bright);
+        transform: translateY(-2px);
+    }
+
+    .stat-card::after {
+        content: "";
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 2px;
+        opacity: 0;
+        transition: opacity var(--transition);
+    }
+
+    .stat-card:hover::after { opacity: 1; }
+
+    .stat-card.c-total::after  { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); }
+    .stat-card.c-sensors::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); }
+    .stat-card.c-ok::after    { background: linear-gradient(90deg, transparent, rgba(34,197,94,0.5), transparent); }
+    .stat-card.c-bad::after   { background: linear-gradient(90deg, transparent, rgba(232,0,29,0.5), transparent); }
+
+    .stat-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: var(--muted);
+        margin-bottom: 12px;
+    }
+
+    .stat-val {
+        font-family: var(--font-display);
+        font-size: 58px;
+        letter-spacing: 2px;
+        line-height: 1;
+        color: var(--white);
+    }
+
+    .stat-card.c-ok  .stat-val { color: var(--ok); }
+    .stat-card.c-bad .stat-val { color: var(--bad); }
+
+    .stat-icon {
+        position: absolute;
+        top: 20px; right: 20px;
+        font-size: 18px;
+        opacity: 0.15;
+    }
+
+    /* ── Controls Bar ── */
+    .controls-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+        animation: fadeUp 0.45s 0.1s ease both;
+    }
+
+    .search-wrap {
+        flex: 1;
+        min-width: 200px;
+        max-width: 360px;
+        position: relative;
+    }
+
+    .search-wrap svg {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        pointer-events: none;
+    }
+
+    .search-wrap input {
+        height: 44px;
+        padding-left: 42px;
+        border-radius: 12px;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .filter-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--muted);
+        margin-right: 2px;
+    }
+
+    .filter-btn {
+        height: 36px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border-bright);
+        background: transparent;
+        color: var(--muted-2);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: var(--transition);
+        white-space: nowrap;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--white);
+        box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .results-count {
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+
+    /* ── Office Grid ── */
+    .office-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+        animation: fadeUp 0.5s 0.15s ease both;
+    }
+
+    .office-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0;
+        overflow: hidden;
+        transition: var(--transition);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .office-card:hover {
+        border-color: rgba(232,0,29,0.25);
+        transform: translateY(-3px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(232,0,29,0.1);
+    }
+
+    .office-card-header {
+        padding: 20px 22px 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .office-number {
+        font-family: var(--font-display);
+        font-size: 38px;
+        letter-spacing: 2px;
+        line-height: 1;
+        color: var(--white);
+    }
+
+    .office-name {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+        font-weight: 500;
+    }
+
+    .office-floor-badge {
+        display: inline-flex;
+        align-items: center;
+        height: 26px;
+        padding: 0 10px;
+        background: var(--surface-2);
+        border: 1px solid var(--border-bright);
+        border-radius: 999px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 1px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .office-card-body {
+        padding: 16px 22px;
+        flex: 1;
+    }
+
+    .office-sensors-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .sensor-dot {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .sensor-dot.ok   { background: var(--ok);   box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+    .sensor-dot.warn { background: var(--warn);  box-shadow: 0 0 6px rgba(245,158,11,0.5); }
+    .sensor-dot.bad  { background: var(--bad);   box-shadow: 0 0 6px rgba(232,0,29,0.5); }
+    .sensor-dot.off  { background: var(--muted); }
+
+    .sensor-info {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.3px;
+    }
+
+    .office-specs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .spec-item {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .spec-val {
+        font-family: var(--font-display);
+        font-size: 22px;
+        letter-spacing: 1px;
+        color: var(--white);
+        line-height: 1;
+    }
+
+    .spec-label {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+    }
+
+    .office-card-footer {
+        padding: 14px 22px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 10px;
+    }
+
+    .office-card-footer .btn {
+        flex: 1;
+        height: 40px;
+        font-size: 12px;
+    }
+
+    /* ── Empty State ── */
+    .empty-state {
+        grid-column: 1/-1;
+        text-align: center;
+        padding: 80px 24px;
+        color: var(--muted);
+    }
+
+    .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.3;
+    }
+
+    .empty-state h3 {
+        font-family: var(--font-display);
+        font-size: 28px;
+        letter-spacing: 2px;
+        color: var(--surface-3);
+        margin-bottom: 8px;
+    }
+
+    /* ── Hidden class ── */
+    .hidden { display: none !important; }
+
+    @media (max-width: 900px) {
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 560px) {
+        .stats-row { grid-template-columns: 1fr 1fr; }
+        .search-wrap { max-width: 100%; }
+    }
+</style>
+
+<!-- ── Stats Row ── -->
+<div class="stats-row">
+    <div class="stat-card c-total">
+        <div class="stat-icon">🏛</div>
+        <div class="stat-label">Кабинеты</div>
+        <div class="stat-val">{{ total_rooms }}</div>
     </div>
-    <div class="card">
-        <h3>Всего датчиков</h3>
-        <div style="font-size: 32px; font-weight: 700;">{{ total_sensors }}</div>
+    <div class="stat-card c-sensors">
+        <div class="stat-icon">📡</div>
+        <div class="stat-label">Датчики</div>
+        <div class="stat-val">{{ total_sensors }}</div>
     </div>
-    <div class="card">
-        <h3>Активные</h3>
-        <div style="font-size: 32px; font-weight: 700;" class="status-active">{{ active_sensors }}</div>
+    <div class="stat-card c-ok">
+        <div class="stat-icon">✓</div>
+        <div class="stat-label">Активные</div>
+        <div class="stat-val">{{ active_sensors }}</div>
     </div>
-    <div class="card">
-        <h3>С ошибкой</h3>
-        <div style="font-size: 32px; font-weight: 700;" class="status-error">{{ error_sensors }}</div>
+    <div class="stat-card c-bad">
+        <div class="stat-icon">!</div>
+        <div class="stat-label">С ошибкой</div>
+        <div class="stat-val">{{ error_sensors }}</div>
     </div>
 </div>
 
-<div style="margin-top: 24px;" class="room-grid">
+<!-- ── Controls Bar ── -->
+<div class="controls-bar">
+    <div class="search-wrap">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="officeSearch" placeholder="Поиск по номеру или названию…" autocomplete="off">
+    </div>
+
+    <div class="filter-group">
+        <span class="filter-label">Этаж</span>
+        <button class="filter-btn active" data-floor="all">Все</button>
+        {% for room in rooms %}
+            <button class="filter-btn floor-filter-btn" data-floor="{{ room.floor }}">{{ room.floor }} эт.</button>
+        {% endfor %}
+    </div>
+
+    <span class="results-count" id="resultsCount">{{ rooms|length }} кабинетов</span>
+</div>
+
+<!-- ── Office Grid ── -->
+<div class="office-grid" id="officeGrid">
     {% for room in rooms %}
-        <div class="card">
-            <h2>{{ room.name }}</h2>
-            <div class="muted">Этаж {{ room.floor }}</div>
+    <div class="office-card"
+         data-name="{{ room.name }}"
+         data-floor="{{ room.floor }}">
 
-            <div class="room-meta">
-                <div class="pill">Стулья: {{ room.chairs }}</div>
-                <div class="pill">Парты: {{ room.desks }}</div>
-                <div class="pill">ПК: {{ room.computers }}</div>
-                <div class="pill">Окна: {{ room.windows }}</div>
+        <div class="office-card-header">
+            <div>
+                <div class="office-number">{{ room.name }}</div>
+                <div class="office-name">Этаж {{ room.floor }}</div>
+            </div>
+            <div class="office-floor-badge">ЭТАЖ {{ room.floor }}</div>
+        </div>
+
+        <div class="office-card-body">
+            <div class="office-sensors-row">
+                <div class="sensor-dot ok"></div>
+                <span class="sensor-info">{{ room.sensor_set.count }} датчик(-ов)</span>
             </div>
 
-            <div style="margin-top: 14px;">
-                <strong>Датчики:</strong> {{ room.sensor_set.count }}
-            </div>
-
-            <div class="actions">
-                <a class="btn" href="{% url 'university:room_detail' room.id %}">Открыть кабинет</a>
-                <a class="btn btn-secondary" href="{% url 'university:room_simulate' room.id %}">Симулировать</a>
+            <div class="office-specs">
+                <div class="spec-item">
+                    <div class="spec-val">{{ room.chairs }}</div>
+                    <div class="spec-label">Стулья</div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-val">{{ room.desks }}</div>
+                    <div class="spec-label">Парты</div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-val">{{ room.computers }}</div>
+                    <div class="spec-label">ПК</div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-val">{{ room.windows }}</div>
+                    <div class="spec-label">Окна</div>
+                </div>
             </div>
         </div>
+
+        <div class="office-card-footer">
+            <a class="btn" href="{% url 'university:room_detail' room.id %}">Открыть</a>
+            <a class="btn btn-secondary" href="{% url 'university:room_simulate' room.id %}">Симуляция</a>
+        </div>
+    </div>
     {% empty %}
-        <div class="card">
-            <h3>Кабинеты не найдены</h3>
-            <p class="muted">Сначала добавь кабинеты в админке.</p>
-            <a class="btn" href="/admin/university/room/">Перейти в админку</a>
-        </div>
+    <div class="empty-state">
+        <div class="empty-state-icon">🏛</div>
+        <h3>Кабинеты не найдены</h3>
+        <p>Добавьте кабинеты через админку.</p>
+        <a class="btn" href="/admin/university/room/" style="margin-top:20px;display:inline-flex;">В Админку</a>
+    </div>
     {% endfor %}
+
+    <!-- No-results message (hidden by default) -->
+    <div class="empty-state hidden" id="noResults">
+        <div class="empty-state-icon">🔍</div>
+        <h3>Ничего не найдено</h3>
+        <p>Попробуйте изменить параметры поиска.</p>
+    </div>
 </div>
+
+<script>
+(function () {
+    const searchInput  = document.getElementById('officeSearch');
+    const grid         = document.getElementById('officeGrid');
+    const noResults    = document.getElementById('noResults');
+    const countEl      = document.getElementById('resultsCount');
+    const cards        = Array.from(grid.querySelectorAll('.office-card'));
+    const floorBtns    = Array.from(document.querySelectorAll('.filter-btn'));
+
+    let activeFloor = 'all';
+    let searchQ     = '';
+
+    /* de-duplicate floor buttons */
+    const seen = new Set();
+    floorBtns.forEach(btn => {
+        const f = btn.dataset.floor;
+        if (f === 'all') return;
+        if (seen.has(f)) { btn.remove(); return; }
+        seen.add(f);
+    });
+
+    function apply() {
+        let visible = 0;
+
+        cards.forEach(card => {
+            const name  = (card.dataset.name  || '').toLowerCase();
+            const floor = (card.dataset.floor || '');
+
+            const matchSearch = !searchQ || name.includes(searchQ);
+            const matchFloor  = activeFloor === 'all' || floor === activeFloor;
+
+            if (matchSearch && matchFloor) {
+                card.classList.remove('hidden');
+                visible++;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+
+        noResults.classList.toggle('hidden', visible > 0);
+
+        const label = visible === 1 ? 'кабинет' : visible < 5 ? 'кабинета' : 'кабинетов';
+        countEl.textContent = visible + ' ' + label;
+    }
+
+    searchInput.addEventListener('input', function () {
+        searchQ = this.value.trim().toLowerCase();
+        apply();
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            activeFloor = this.dataset.floor;
+            apply();
+        });
+    });
+
+    /* Staggered entrance animation */
+    cards.forEach((card, i) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.4s ease, transform 0.4s ease, border-color 0.22s, box-shadow 0.22s';
+        setTimeout(() => {
+            card.style.opacity = '';
+            card.style.transform = '';
+        }, 60 + i * 45);
+    });
+})();
+</script>
+
 {% endblock %}
