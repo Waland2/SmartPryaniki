@@ -9,8 +9,8 @@ load_dotenv()
 
 class APIClient:
     def __init__(self):
-        self.base_url = "https://zefixed.ru/raspyx/api"
-        self.auth_base_url = "https://zefixed.ru/auth/api"
+        self.base_url = "http://89.39.121.218:8085/raspyx/api/v2"
+        self.auth_base_url = "http://89.39.121.218:8081/auth/api/v1/login"
 
         self.token = os.getenv("ACCESS_TOKEN")
         self.username = os.getenv("API_USERNAME")
@@ -29,7 +29,7 @@ class APIClient:
 
     def login(self):
         response = self.session.post(
-            f"{self.auth_base_url}/v1/login",
+            self.auth_base_url,  
             json={
                 "username": self.username,
                 "password": self.password,
@@ -46,6 +46,8 @@ class APIClient:
         if response.status_code == 200:
             data = response.json()
             self.token = data.get("result", {}).get("access_token")
+            if self.token:
+                self.session.headers.update({"Authorization": f"Bearer {self.token}"})
             return True
 
         print("Ошибка логина:", response.status_code)
@@ -54,6 +56,7 @@ class APIClient:
 
     def _get_with_relogin(self, url):
         response = self.session.get(url, headers=self.get_headers())
+
 
         if response.status_code == 200:
             return response.json()
@@ -76,10 +79,10 @@ class APIClient:
 
     def get_schedule(self, group):
         return self._get_with_relogin(
-            f"{self.base_url}/v2/schedule/group_number/{quote(str(group), safe='')}"
+            f"{self.base_url}/schedule/group_number/{quote(str(group), safe='')}"
         )
 
     def get_schedule_by_teacher(self, teacher_fio):
         return self._get_with_relogin(
-            f"{self.base_url}/v2/schedule/teacher_fio/{quote(teacher_fio, safe='')}"
+            f"{self.base_url}/schedule/teacher_fio/{quote(teacher_fio, safe='')}"
         )
