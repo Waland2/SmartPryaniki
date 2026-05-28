@@ -1,410 +1,180 @@
-{% extends "layout.html" %}
+{% extends "dashboard/base.html" %}
 
-{% block title %}Текущий день{% endblock %}
-
-{% block extra_styles %}
+{% block content %}
 <style>
-    :root {
-        --bg: #eef2f7;
-        --panel: #ffffff;
-        --line: #dbe3ee;
-        --text: #1f2937;
-        --muted: #64748b;
-        --gold: #4f46e5;
-        --gold-soft: #e9efff;
-        --accent: #4338ca;
-        --ok: #166534;
-        --shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
-        --radius: 24px;
-    }
+    /* ─── АДАПТАЦИЯ ПОД ТЕМНУЮ ТЕМУ И ЕДИНЫЙ БОРДЕР ─── */
+    .filters { display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; margin-top: 24px; }
 
-    * { box-sizing: border-box; }
-
-    body {
-        font-family: "Segoe UI", system-ui, sans-serif;
-        background: radial-gradient(circle at top left, #f8fbff 0%, var(--bg) 52%, #e7eef8 100%);
-        color: var(--text);
-    }
-
-    .page {
-        max-width: 1380px;
-        margin: 0 auto;
-        padding: 28px 24px 34px;
-    }
-
-    .hero,
-    .content {
-        display: grid;
-        grid-template-columns: 1.618fr 1fr;
-        gap: 24px;
-    }
-
-    .content { margin-top: 24px; }
-
-    .card {
-        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
-        border: 1px solid rgba(79, 70, 229, 0.12);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        padding: 28px;
-    }
-
-    .hero-card {
-        min-height: 280px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-
-    .eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        align-self: flex-start;
-        padding: 9px 14px;
-        border-radius: 999px;
-        background: var(--gold-soft);
-        color: var(--accent);
-        font-weight: 700;
-    }
-
-    h1, h2, h3 { margin: 0; }
-    h1 { font-size: clamp(38px, 5vw, 58px); line-height: 1.02; }
-    h2 { font-size: 28px; }
-
-    .subtitle {
-        margin-top: 16px;
-        max-width: 720px;
-        color: var(--muted);
-        font-size: 18px;
-        line-height: 1.65;
-    }
-
-    .filters {
-        display: grid;
-        grid-template-columns: 1fr 1fr auto;
-        gap: 14px;
-        align-items: end;
-        margin-top: 24px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 8px;
-        color: var(--muted);
-        font-size: 14px;
-        font-weight: 700;
-    }
-
-    input,
-    select,
-    button {
-        width: 100%;
-        padding: 14px 16px;
-        border-radius: 16px;
-        border: 1px solid var(--line);
-        background: #ffffff;
-        color: var(--text);
-        font: inherit;
-    }
-
-    button {
-        background: linear-gradient(135deg, #4f46e5, #4338ca);
-        color: #fff;
-        border: none;
-        font-weight: 800;
-        cursor: pointer;
-        box-shadow: 0 10px 24px rgba(79, 70, 229, 0.22);
-    }
-
-    .chips {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-top: 18px;
-    }
-
-    .chip {
-        padding: 10px 14px;
-        border-radius: 999px;
-        background: #ffffff;
-        border: 1px solid var(--line);
-        color: var(--accent);
-        font-weight: 600;
-    }
-
-    .metrics {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-    }
-
-    .metric {
-        min-height: 132px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-
-    .metric-title { color: var(--muted); font-weight: 700; }
-    .metric-value { font-size: 28px; font-weight: 800; }
-    .metric-note { color: var(--accent); }
-
-    .schedule-list {
-        display: grid;
-        gap: 14px;
-        margin-top: 18px;
-    }
+    .timeline-grid { display: grid; gap: 16px; margin-top: 24px; }
 
     .lesson-card {
         display: block;
-        text-decoration: none;
-        color: inherit;
-        border-radius: 22px;
-        border: 1px solid var(--line);
-        background: #ffffff;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border); /* Обводка 0.07 белого */
+        background: var(--surface);
         padding: 20px;
-        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        transition: var(--transition);
+        position: relative;
     }
 
-    .lesson-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-        border-color: rgba(79, 70, 229, 0.4);
-    }
+    .lesson-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .lesson-card.active { border-color: var(--accent); background: var(--surface-2); }
+    .lesson-card.selected { box-shadow: 0 0 0 2px var(--ok); }
 
-    .lesson-card.active {
-        background: linear-gradient(180deg, #eef2ff, #e9efff);
-        border-color: rgba(79, 70, 229, 0.7);
-    }
-
-    .lesson-card.selected {
-        outline: 2px solid rgba(15, 118, 110, 0.42);
-    }
-
-    .lesson-head {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        align-items: flex-start;
-    }
-
-    .lesson-title { font-size: 21px; font-weight: 800; }
+    .lesson-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .lesson-title { font-size: 21px; font-weight: 800; color: var(--white); }
     .lesson-time { color: var(--accent); font-weight: 700; }
-    .lesson-meta { margin-top: 10px; color: var(--muted); line-height: 1.55; }
+    .lesson-meta { margin-top: 10px; color: var(--muted-2); line-height: 1.55; font-size: 13px; }
 
-    .badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 14px;
-    }
-
-    .badge {
-        padding: 8px 12px;
-        border-radius: 999px;
-        font-size: 13px;
-        font-weight: 700;
-    }
-
-    .badge-blue { background: #edf4ff; color: #2e5b9a; }
-    .badge-gold { background: #fff3da; color: #8f6a2a; }
-    .badge-gray { background: #f4efe4; color: #7c6b52; }
-
-    .sidebar-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-        margin-top: 18px;
-    }
+    .sidebar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
 
     .info-box {
-        background: #f8fafc;
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 18px;
+        background: var(--surface-2);
+        border: 1px solid var(--border); /* Обводка 0.07 белого */
+        border-radius: var(--radius-sm);
+        padding: 16px;
     }
-
-    .info-title { color: var(--muted); font-size: 14px; font-weight: 700; }
-    .info-value { margin-top: 10px; font-size: 22px; font-weight: 800; }
+    .info-title { color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
+    .info-value { margin-top: 8px; font-size: 20px; font-weight: 800; color: var(--white); }
 
     .sensor-list { display: grid; gap: 12px; margin-top: 18px; }
-
     .sensor-item {
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 16px 18px;
-        border-radius: 18px;
-        background: #f8fafc;
-        border: 1px solid var(--line);
+        display: flex; justify-content: space-between; gap: 16px; padding: 16px 18px;
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        border: 1px solid var(--border); /* Обводка 0.07 белого */
     }
+    .sensor-name { font-weight: 800; color: var(--white); }
+    .sensor-type { margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .sensor-value { align-self: center; font-weight: 800; color: var(--accent); font-family: var(--font-mono); font-size: 18px; }
 
-    .sensor-name { font-weight: 800; }
-    .sensor-type { margin-top: 6px; color: var(--muted); font-size: 14px; }
-    .sensor-value { align-self: center; font-weight: 800; color: var(--accent); }
+    .warning-box { margin-top: 18px; padding: 16px; border-radius: var(--radius-sm); background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--warn); font-weight: 600; }
 
-    .warning {
-        margin-top: 18px;
-        padding: 14px 16px;
-        border-radius: 16px;
-        background: #fff7e6;
-        border: 1px solid rgba(200, 169, 107, 0.55);
-        color: #8a6428;
-    }
-
-    .notes { margin-top: 14px; color: var(--muted); line-height: 1.6; }
-
-    @media (max-width: 1024px) {
-        .hero, .content { grid-template-columns: 1fr; }
-        .filters { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 640px) {
-        .page { padding-left: 16px; padding-right: 16px; }
-        .sidebar-grid, .metrics { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 1024px) { .filters { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .sidebar-grid { grid-template-columns: 1fr; } }
 </style>
-{% endblock %}
 
-{% block content %}
-<div class="page">
-    <section class="hero">
-        <div class="card hero-card">
-            <div>
-                <div class="eyebrow">Сегодня {{ today_label }} · Сейчас {{ now_time }}</div>
-                <h1>Текущий день</h1>
-            </div>
+<div class="card">
+    <div style="margin-bottom: 8px; font-size: 12px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Сегодня {{ today_label }}</div>
+    <h1 style="font-size: 32px; font-family: var(--font-display); color: var(--white); font-weight: 800; margin-bottom: 24px;">Текущий день</h1>
 
-            <div>
-                <form method="get" class="filters">
-                    <div>
-                        <label>Дата</label>
-                        <input type="date" name="date" value="{{ selected_date }}">
-                    </div>
-                    <div>
-                        <label>Номер пары</label>
-                        <select name="pair">
-                            {% for lesson in schedule %}
-                                <option value="{{ lesson.lesson_number }}" {% if lesson.is_selected %}selected{% endif %}>
-                                    {{ lesson.lesson_number }} пара · {{ lesson.time }}
-                                </option>
-                            {% empty %}
-                                <option value="">Нет пар</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <button type="submit">Показать кабинет</button>
-                    </div>
-                </form>
-
-                <div class="chips">
-                    <div class="chip">День: {{ selected_day_label }}</div>
-                    <div class="chip">Кабинет: {{ selected_room|default:"—" }}</div>
-                    <div class="chip">Пара: {{ room_pair_now }}</div>
-                </div>
-
-                {% if warning %}
-                    <div class="warning">{{ warning }}</div>
-                {% endif %}
-            </div>
+    <form method="get" class="filters">
+        <div>
+            <label>Дата</label>
+            <input type="date" name="date" value="{{ selected_date }}">
         </div>
-
-        <div class="metrics">
-            <div class="card metric">
-                <div class="metric-title">Температура</div>
-                <div class="metric-value">{% if room_info.temperature is not None %}{{ room_info.temperature|floatformat:1 }} °C{% else %}—{% endif %}</div>
-                <div class="metric-note">По данным кабинета</div>
-            </div>
-            <div class="card metric">
-                <div class="metric-title">Кондиционер</div>
-                <div class="metric-value">{% if room_info.conditioner_on %}Включен{% elif room_info.conditioner_on is None %}—{% else %}Выключен{% endif %}</div>
-                <div class="metric-note">Установлено: {{ room_info.conditioners_count }}</div>
-            </div>
-            <div class="card metric">
-                <div class="metric-title">Свет</div>
-                <div class="metric-value">{% if room_info.light_on %}Включен{% elif room_info.light_on is None %}—{% else %}Выключен{% endif %}</div>
-                <div class="metric-note">Освещение аудитории</div>
-            </div>
-            <div class="card metric">
-                <div class="metric-title">Всего датчиков</div>
-                <div class="metric-value">{{ room_info.sensors_count }}</div>
-                <div class="metric-note">Подключено к кабинету</div>
-            </div>
-        </div>
-    </section>
-
-    <section class="content">
-        <div class="card">
-            <h2>Пары преподавателя на выбранную дату</h2>
-
-            {% if current_pair_message %}
-                <div class="warning">{{ current_pair_message }}</div>
-            {% endif %}
-
-            <div class="schedule-list">
+        <div>
+            <label>Номер пары</label>
+            <select name="pair">
                 {% for lesson in schedule %}
-                    <a class="lesson-card{% if lesson.is_active %} active{% endif %}{% if lesson.is_selected %} selected{% endif %}" href="?date={{ selected_date }}&pair={{ lesson.lesson_number }}&room={{ lesson.rooms.0|default:selected_room|urlencode }}">
-                        <div class="lesson-head">
-                            <div class="lesson-title">{{ lesson.lesson_number }} пара — {{ lesson.subject_name }}</div>
-                            <div class="lesson-time">{{ lesson.time }}</div>
-                        </div>
-                        <div class="lesson-meta">
-                            Кабинет: {{ lesson.rooms|join:", "|default:"—" }} · Группа: {{ lesson.group|default:"—" }}
-                            {% if lesson.subject_type %}· {{ lesson.subject_type }}{% endif %}
-                        </div>
-                        <div class="badges">
-                            {% if lesson.is_active %}<span class="badge badge-gold">Текущая пара</span>{% endif %}
-                            {% if lesson.is_selected %}<span class="badge badge-blue">Открыты данные кабинета</span>{% else %}<span class="badge badge-gray">Открыть кабинет этой пары</span>{% endif %}
-                        </div>
-                    </a>
+                    <option value="{{ lesson.lesson_number }}" {% if lesson.is_selected %}selected{% endif %}>
+                        {{ lesson.lesson_number }} пара · {{ lesson.time }}
+                    </option>
                 {% empty %}
-                    <div class="warning">На выбранную дату занятия не найдены.</div>
+                    <option value="">Нет пар</option>
                 {% endfor %}
+            </select>
+        </div>
+        <div>
+            <button type="submit" class="btn" style="width: 100%; height: 44px; margin-bottom: 2px;">Показать кабинет</button>
+        </div>
+    </form>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px;">
+        <div class="pill">День: {{ selected_day_label }}</div>
+        <div class="pill">Кабинет: {{ selected_room|default:"—" }}</div>
+        <div class="pill">Пара: {{ room_pair_now }}</div>
+    </div>
+
+    {% if warning %}
+        <div class="warning-box">{{ warning }}</div>
+    {% endif %}
+</div>
+
+<div class="grid">
+    <div class="card" style="padding: 20px;">
+        <div class="metric-title" style="margin-bottom: 12px; color: var(--muted); text-transform: uppercase; font-size: 10px;">Температура</div>
+        <div class="stat-num" style="font-size: 32px;">{% if room_info.temperature is not None %}{{ room_info.temperature|floatformat:1 }} °C{% else %}—{% endif %}</div>
+    </div>
+    <div class="card" style="padding: 20px;">
+        <div class="metric-title" style="margin-bottom: 12px; color: var(--muted); text-transform: uppercase; font-size: 10px;">Кондиционер</div>
+        <div class="stat-num" style="font-size: 32px; color: var(--accent);">{% if room_info.conditioner_on %}ВКЛ{% elif room_info.conditioner_on is None %}—{% else %}ВЫКЛ{% endif %}</div>
+    </div>
+    <div class="card" style="padding: 20px;">
+        <div class="metric-title" style="margin-bottom: 12px; color: var(--muted); text-transform: uppercase; font-size: 10px;">Свет</div>
+        <div class="stat-num" style="font-size: 32px; color: var(--ok);">{% if room_info.light_on %}ВКЛ{% elif room_info.light_on is None %}—{% else %}ВЫКЛ{% endif %}</div>
+    </div>
+    <div class="card" style="padding: 20px;">
+        <div class="metric-title" style="margin-bottom: 12px; color: var(--muted); text-transform: uppercase; font-size: 10px;">Датчиков</div>
+        <div class="stat-num" style="font-size: 32px;">{{ room_info.sensors_count }}</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px;">
+    <div class="card">
+        <h2 style="margin-bottom: 20px;">Ваши пары на выбранную дату</h2>
+
+        {% if current_pair_message %}
+            <div class="warning-box" style="margin-bottom: 20px;">{{ current_pair_message }}</div>
+        {% endif %}
+
+        <div class="timeline-grid">
+            {% for lesson in schedule %}
+                <a class="lesson-card{% if lesson.is_active %} active{% endif %}{% if lesson.is_selected %} selected{% endif %}" href="?date={{ selected_date }}&pair={{ lesson.lesson_number }}&room={{ lesson.rooms.0|default:selected_room|urlencode }}">
+                    <div class="lesson-head">
+                        <div class="lesson-title">{{ lesson.lesson_number }} пара — {{ lesson.subject_name }}</div>
+                        <div class="lesson-time">{{ lesson.time }}</div>
+                    </div>
+                    <div class="lesson-meta">Кабинет: {{ lesson.rooms|join:", "|default:"—" }} · Группа: {{ lesson.group|default:"—" }}</div>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        {% if lesson.is_active %}<span class="pill" style="border-color: var(--warn); color: var(--warn);">Текущая пара</span>{% endif %}
+                        {% if lesson.is_selected %}<span class="pill" style="border-color: var(--ok); color: var(--ok);">Выбрана</span>{% endif %}
+                    </div>
+                </a>
+            {% empty %}
+                <p class="muted">На выбранную дату занятия не найдены.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 style="margin-bottom: 20px;">Кабинет выбранной пары</h2>
+        <div class="sidebar-grid">
+            <div class="info-box">
+                <div class="info-title">Этаж</div>
+                <div class="info-value">{{ room_info.floor }}</div>
+            </div>
+            <div class="info-box">
+                <div class="info-title">Оснащение</div>
+                <div class="info-value" style="font-size: 16px;">Стулья: {{ room_info.chairs }}<br>ПК: {{ room_info.computers }}</div>
             </div>
         </div>
 
-        <div class="card">
-            <h2>Кабинет выбранной пары</h2>
+        {% if room_info.updated_at %}
+            <p class="muted" style="margin-top: 20px; font-size: 12px;">Обновлено: {{ room_info.updated_at }}</p>
+        {% endif %}
 
-            <div class="sidebar-grid">
-                <div class="info-box">
-                    <div class="info-title">Этаж</div>
-                    <div class="info-value">{{ room_info.floor }}</div>
-                </div>
-                <div class="info-box">
-                    <div class="info-title">Оснащение</div>
-                    <div class="info-value" style="font-size: 18px;">{{ room_info.chairs }} стульев · {{ room_info.desks }} парт · {{ room_info.computers }} ПК</div>
-                </div>
-            </div>
-
-            {% if room_info.updated_at %}
-                <div class="notes">Последнее обновление датчиков: {{ room_info.updated_at }}</div>
-            {% endif %}
-
-            <div class="sensor-list">
-                {% for sensor in room_info.sensor_cards %}
-                    {% if "co2" not in sensor.name|lower and "co2" not in sensor.type|lower and "освещ" not in sensor.name|lower and "освещ" not in sensor.type|lower %}
-                        <div class="sensor-item">
-                            <div>
-                                <div class="sensor-name">{{ sensor.name }}</div>
-                                <div class="sensor-type">{{ sensor.type }} · {{ sensor.status }}</div>
-                            </div>
-                            <div class="sensor-value">{{ sensor.value }}</div>
-                        </div>
-                    {% endif %}
-                {% empty %}
+        <div class="sensor-list">
+            {% for sensor in room_info.sensor_cards %}
+                {% if "co2" not in sensor.name|lower and "co2" not in sensor.type|lower and "освещ" not in sensor.name|lower and "освещ" not in sensor.type|lower %}
                     <div class="sensor-item">
                         <div>
-                            <div class="sensor-name">Датчики не найдены</div>
-                            <div class="sensor-type">Для этого кабинета пока нет данных в локальной базе</div>
+                            <div class="sensor-name">{{ sensor.name }}</div>
+                            <div class="sensor-type">{{ sensor.type }} · {% if sensor.status == "Работает" %}<span style="color: var(--ok);">Работает</span>{% else %}<span style="color: var(--bad);">{{ sensor.status }}</span>{% endif %}</div>
                         </div>
-                        <div class="sensor-value">—</div>
+                        <div class="sensor-value">{{ sensor.value }}</div>
                     </div>
-                {% endfor %}
-            </div>
+                {% endif %}
+            {% empty %}
+                <div class="sensor-item">
+                    <div>
+                        <div class="sensor-name">Датчики не найдены</div>
+                        <div class="sensor-type">Для этого кабинета пока нет данных</div>
+                    </div>
+                    <div class="sensor-value">—</div>
+                </div>
+            {% endfor %}
         </div>
-    </section>
+    </div>
 </div>
 {% endblock %}

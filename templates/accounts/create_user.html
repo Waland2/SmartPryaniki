@@ -1,83 +1,69 @@
 {% extends "dashboard/base.html" %}
 
 {% block content %}
-<div class="card" style="max-width: 760px;">
+<div class="card" style="max-width: 760px; margin: 0 auto;">
     <h2 style="margin-bottom: 8px;">Создать пользователя</h2>
-    <p class="muted" style="margin-top: 0;">Логин будет создан автоматически по ФИО</p>
+    <p class="muted" style="margin-top: 0; margin-bottom: 24px;">Логин будет создан автоматически по ФИО</p>
 
     {% if error %}
-    <div
-        style="margin: 16px 0; padding: 12px 14px; border-radius: 10px; background: rgba(255, 107, 107, 0.12); color: #ff8a8a; border: 1px solid rgba(255, 107, 107, 0.35);">
+    <div style="margin-bottom: 20px; padding: 14px 16px; border-radius: 12px; background: rgba(232, 0, 29, 0.1); color: var(--bad); border: 1px solid rgba(232, 0, 29, 0.3);">
         {{ error }}
     </div>
     {% endif %}
 
     {% if success %}
-    <div
-        style="margin: 16px 0; padding: 12px 14px; border-radius: 10px; background: rgba(56, 193, 114, 0.12); color: #7ee2a8; border: 1px solid rgba(56, 193, 114, 0.35);">
+    <div style="margin-bottom: 20px; padding: 14px 16px; border-radius: 12px; background: rgba(34, 197, 94, 0.1); color: var(--ok); border: 1px solid rgba(34, 197, 94, 0.3);">
         {{ success }}
     </div>
     {% endif %}
 
     {% if created_username or created_password %}
-    <div
-        style="margin: 16px 0; padding: 12px 14px; border-radius: 10px; background: rgba(90, 169, 255, 0.12); color: #9fd0ff; border: 1px solid rgba(90, 169, 255, 0.35);">
+    <div style="margin-bottom: 20px; padding: 14px 16px; border-radius: 12px; background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">
         {% if created_username %}
-        <div>Созданный логин: <strong>{{ created_username }}</strong></div>
+        <div>Созданный логин: <strong style="color: #fff;">{{ created_username }}</strong></div>
         {% endif %}
         {% if created_password %}
-        <div style="margin-top: 8px;">Созданный пароль: <strong>{{ created_password }}</strong></div>
+        <div style="margin-top: 8px;">Созданный пароль: <strong style="color: #fff;">{{ created_password }}</strong></div>
         {% endif %}
     </div>
     {% endif %}
 
-    <form method="post" style="margin-top: 20px;">
+    <form method="post">
         {% csrf_token %}
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div>
-                <label for="last_name" style="display:block; margin-bottom:8px; color: var(--muted);">Фамилия</label>
-                <input id="last_name" name="last_name" type="text" placeholder="Иванов" required
-                    style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--card-2); color: var(--text);">
+                <label for="last_name">Фамилия</label>
+                <input id="last_name" name="last_name" type="text" placeholder="Иванов" required>
             </div>
 
             <div>
-                <label for="first_name" style="display:block; margin-bottom:8px; color: var(--muted);">Имя</label>
-                <input id="first_name" name="first_name" type="text" placeholder="Иван" required
-                    style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--card-2); color: var(--text);">
+                <label for="first_name">Имя</label>
+                <input id="first_name" name="first_name" type="text" placeholder="Иван" required>
             </div>
 
             <div style="grid-column: 1 / -1;">
-                <label for="middle_name" style="display:block; margin-bottom:8px; color: var(--muted);">Отчество</label>
-                <input id="middle_name" name="middle_name" type="text" placeholder="Иванович"
-                    style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--card-2); color: var(--text);">
+                <label for="middle_name">Отчество</label>
+                <input id="middle_name" name="middle_name" type="text" placeholder="Иванович">
             </div>
 
             <div>
-                <label for="password" style="display:block; margin-bottom:8px; color: var(--muted);">Пароль</label>
-                <input id="password" name="password" type="text" placeholder="Введите пароль"
-                    style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--card-2); color: var(--text);">
+                <label for="password">Пароль</label>
+                <input id="password" name="password" type="text" placeholder="Введите пароль">
             </div>
 
             <div>
-                <label for="role" style="display:block; margin-bottom:8px; color: var(--muted);">Роль</label>
-                <select id="role" name="role"
-                    style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background: var(--card-2); color: var(--text);">
+                <label for="role">Роль</label>
+                <select id="role" name="role">
                     <option value="teacher">Преподаватель</option>
                     <option value="moderator">Младший администратор</option>
                 </select>
             </div>
         </div>
 
-        <label for="generate-password"
-            style="display:flex; align-items:center; gap:10px; margin-top:16px; color: var(--muted); cursor:pointer;">
-            <input type="checkbox" id="generate-password" name="generate_password">
-            <span>Сгенерировать случайный пароль</span>
-        </label>
-
-        <div class="actions" style="margin-top: 20px;">
+        <div class="actions" style="margin-top: 30px;">
             <button type="submit" class="btn">Создать пользователя</button>
-            <a href="{% url 'university:dashboard_home' %}" class="btn btn-secondary">Назад в кабинет</a>
+            <a href="{% url 'university:dashboard_home' %}" class="btn btn-secondary">Назад в панель</a>
         </div>
     </form>
 </div>
@@ -96,7 +82,6 @@
                 passwordInput.value = "";
             }
         }
-
         generatePasswordCheckbox.addEventListener("change", togglePasswordField);
         togglePasswordField();
     }
