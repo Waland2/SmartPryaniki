@@ -10,10 +10,15 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -39,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'university',
+    'university.apps.UniversityConfig',
 ]
 
 MIDDLEWARE = [
@@ -76,11 +81,46 @@ WSGI_APPLICATION = 'SmartPryaniki.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+SQLITE_DATABASE = {
+    'ENGINE': 'django.db.backends.sqlite3',
+    'NAME': BASE_DIR / 'db.sqlite3',
+}
+
+POSTGRES_DATABASE = {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': os.getenv('POSTGRES_DB', ''),
+    'USER': os.getenv('POSTGRES_USER', ''),
+    'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+    'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+    'PORT': os.getenv('POSTGRES_PORT', '5432'),
+}
+
+
+def can_use_postgres(database_config):
+    required_settings = ('NAME', 'USER', 'PASSWORD')
+    if not all(database_config.get(setting) for setting in required_settings):
+        return False
+
+    try:
+        import psycopg2
+
+        connection = psycopg2.connect(
+            dbname=database_config['NAME'],
+            user=database_config['USER'],
+            password=database_config['PASSWORD'],
+            host=database_config['HOST'],
+            port=database_config['PORT'],
+            connect_timeout=2,
+        )
+        connection.close()
+    except Exception:
+        return False
+
+    return True
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': POSTGRES_DATABASE if can_use_postgres(POSTGRES_DATABASE) else SQLITE_DATABASE,
 }
 
 

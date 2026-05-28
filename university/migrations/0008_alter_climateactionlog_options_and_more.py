@@ -15,20 +15,25 @@ class Migration(migrations.Migration):
             name='climateactionlog',
             options={'ordering': ('-created_at',), 'verbose_name': 'История настройки кабинета', 'verbose_name_plural': 'История настройки кабинетов'},
         ),
-        migrations.RenameIndex(
-            model_name='teachernotification',
-            new_name='university__user_id_ccddb7_idx',
-            old_name='university_t_user_id_8fb2ab_idx',
-        ),
-        migrations.RenameIndex(
-            model_name='teachernotification',
-            new_name='university__lesson__6af5d4_idx',
-            old_name='university_t_lesson__ee08c6_idx',
-        ),
-        migrations.RenameIndex(
-            model_name='teachernotification',
-            new_name='university__valid_f_9966c4_idx',
-            old_name='university_t_valid_f_6523d7_idx',
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.RenameIndex(
+                    model_name='teachernotification',
+                    new_name='university__user_id_ccddb7_idx',
+                    old_name='university_t_user_id_8fb2ab_idx',
+                ),
+                migrations.RenameIndex(
+                    model_name='teachernotification',
+                    new_name='university__lesson__6af5d4_idx',
+                    old_name='university_t_lesson__ee08c6_idx',
+                ),
+                migrations.RenameIndex(
+                    model_name='teachernotification',
+                    new_name='university__valid_f_9966c4_idx',
+                    old_name='university_t_valid_f_6523d7_idx',
+                ),
+            ],
         ),
         migrations.AlterField(
             model_name='climateactionlog',
