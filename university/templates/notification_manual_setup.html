@@ -2,18 +2,35 @@
 
 {% block content %}
 <style>
-    /* ─── АДАПТАЦИЯ К ТЕМНОЙ ТЕМЕ ─── */
-    .form-grid { display: grid; gap: 16px; margin-top: 24px; }
+    /* ─── АДАПТАЦИЯ К ТЕМНОЙ ТЕМЕ С ЗАЩИТОЙ ОТ ПЕРЕКРЫТИЯ СЛОЯМИ ─── */
+    .form-grid {
+        display: grid;
+        gap: 16px;
+        margin-top: 24px;
+        position: relative;
+        z-index: 100; /* Вытягиваем сетку поверх звезд */
+        pointer-events: auto;
+    }
 
     .field {
         background: var(--surface-2);
-        border: 1px solid var(--border); /* Обводка 0.07 белого */
+        border: 1px solid var(--border);
         border-radius: var(--radius-sm);
         padding: 24px;
         transition: var(--transition);
+        position: relative;
+        z-index: 101; /* Вытягиваем каждый блок поверх звезд */
+        pointer-events: auto;
     }
 
-    .field.disabled { opacity: 0.5; pointer-events: none; background: rgba(255,255,255,0.02); }
+    /* Жестко делаем инпуты кликабельными */
+    .field input, .field select, .checkbox-label {
+        position: relative;
+        z-index: 102 !important;
+        pointer-events: auto !important;
+    }
+
+    .field.disabled { opacity: 0.5; pointer-events: none !important; background: rgba(255,255,255,0.02); }
     .field.has-error { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
     .field.has-error .hint { color: var(--bad); }
 
@@ -22,12 +39,19 @@
     .checkbox-label { display: flex; align-items: center; gap: 12px; color: var(--white); font-weight: 700; font-size: 16px; cursor: pointer; }
     .checkbox-label input[type="checkbox"] { width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: var(--accent); }
 
-    .sidebar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+    .sidebar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; position: relative; z-index: 100; }
     .info-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
     .info-title { color: var(--muted); font-size: 10px; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
     .info-value { margin-top: 8px; font-size: 18px; font-weight: 800; color: var(--white); }
 
-    .message { margin-top: 20px; padding: 16px; border-radius: var(--radius-sm); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: var(--ok); font-weight: 600; }
+    .message { margin-top: 20px; padding: 16px; border-radius: var(--radius-sm); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: var(--ok); font-weight: 600; position: relative; z-index: 100; }
+
+    .actions {
+        margin-top: 32px;
+        position: relative;
+        z-index: 105; /* Кнопки на самом верху */
+        pointer-events: auto;
+    }
 
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-window { background: var(--surface); border: 1px solid var(--border); max-width: 560px; width: 100%; padding: 32px; border-radius: var(--radius); box-shadow: 0 24px 70px rgba(0,0,0,0.5); }
@@ -35,7 +59,7 @@
     @media (max-width: 640px) { .sidebar-grid { grid-template-columns: 1fr; } }
 </style>
 
-<div class="card">
+<div class="card" style="position: relative; z-index: 10;">
     <div style="margin-bottom: 8px; font-size: 12px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Ручная настройка среды</div>
     <h1 style="font-size: 32px; font-family: var(--font-display); color: var(--white); font-weight: 800; margin-bottom: 16px;">Кабинет {{ item.room_name }}</h1>
 
@@ -52,7 +76,7 @@
     {% endfor %}
 {% endif %}
 
-<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; margin-top: 24px;">
+<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; margin-top: 24px; position: relative; z-index: 10;">
     <div class="card">
         <h2 style="margin-bottom: 8px;">Параметры микроклимата</h2>
         <p class="muted">Заполните поля или оставьте пустыми для передачи алгоритму.</p>
@@ -62,64 +86,63 @@
             <input type="hidden" name="algorithm_for_missing" id="algorithmForMissing" value="0">
 
             <div class="form-grid">
-                <div class="field {% if not capabilities.temperature %}disabled{% endif %}">
+
+                <div class="field">
                     <label>Температура, °C</label>
                     <input type="number" name="temperature" class="manual-required" data-field-label="Температура" step="0.5"
                            min="{{ item.temperature_min|default:'18' }}" max="{{ item.temperature_max|default:'26' }}"
-                           value="{{ manual_settings.temperature|default:'' }}" placeholder="Рекомендуется: {{ item.recommended_temperature|default:'22' }}"
-                           {% if not capabilities.temperature %}disabled{% endif %}>
+                           value="{{ manual_settings.temperature|default:'' }}" placeholder="Рекомендуется: {{ item.recommended_temperature|default:'22' }}">
                     <div class="hint">Если указываете температуру, выберите метод (кондиционер или окна). Диапазон: {{ item.temperature_min|default:'18' }}–{{ item.temperature_max|default:'26' }}°C.</div>
                 </div>
 
-                <div class="field {% if not capabilities.humidity %}disabled{% endif %}">
+                <div class="field">
                     <label>Влажность, %</label>
                     <input type="number" name="humidity" class="manual-required" data-field-label="Влажность" min="30" max="70"
-                           value="{{ manual_settings.humidity|default:'' }}" placeholder="45"
-                           {% if not capabilities.humidity %}disabled{% endif %}>
+                           value="{{ manual_settings.humidity|default:'' }}" placeholder="45">
                     <div class="hint">Оптимальная влажность: 30–70%.</div>
                 </div>
 
-                <div class="field {% if not capabilities.light %}disabled{% endif %}">
+                <div class="field">
                     <label class="checkbox-label">
-                        <input type="checkbox" name="light_on" id="lightOnCheckbox" {% if manual_settings.light_on %}checked{% endif %} {% if not capabilities.light %}disabled{% endif %} onchange="toggleLightLevel()">
+                        <input type="checkbox" name="light_on" id="lightOnCheckbox" {% if manual_settings.light_on %}checked{% endif %} onchange="toggleLightLevel()">
                         Включить освещение
                     </label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
                         <div style="grid-column: 1/-1;">
                             <label>Яркость, %</label>
-                            <input type="number" name="light_level" id="lightLevelInput" class="manual-required" data-field-label="Освещённость" min="0" max="100" value="{{ manual_settings.light_level|default:'' }}" placeholder="80" {% if not capabilities.light %}disabled{% endif %}>
+                            <input type="number" name="light_level" id="lightLevelInput" class="manual-required" data-field-label="Освещённость" min="0" max="100" value="{{ manual_settings.light_level|default:'' }}" placeholder="80">
                         </div>
                         <div>
                             <label>Время включения</label>
-                            <input type="time" name="light_start" value="{{ manual_settings.light_start|default:time_limits.lesson_start }}" min="{{ time_limits.lesson_start }}" max="{{ time_limits.lesson_end }}" {% if not capabilities.light %}disabled{% endif %}>
+                            <input type="time" name="light_start" value="{{ manual_settings.light_start|default:time_limits.lesson_start }}" min="{{ time_limits.lesson_start }}" max="{{ time_limits.lesson_end }}">
                         </div>
                         <div>
                             <label>Время выключения</label>
-                            <input type="time" name="light_end" value="{{ manual_settings.light_end|default:time_limits.lesson_end }}" min="{{ time_limits.lesson_start }}" max="{{ time_limits.lesson_end }}" {% if not capabilities.light %}disabled{% endif %}>
+                            <input type="time" name="light_end" value="{{ manual_settings.light_end|default:time_limits.lesson_end }}" min="{{ time_limits.lesson_start }}" max="{{ time_limits.lesson_end }}">
                         </div>
                     </div>
                 </div>
 
-                <div class="field {% if not capabilities.conditioner %}disabled{% endif %}">
+                <div class="field">
                     <label class="checkbox-label">
-                        <input type="checkbox" name="conditioner_on" id="conditionerOnCheckbox" {% if manual_settings.conditioner_on %}checked{% endif %} {% if not capabilities.conditioner %}disabled{% endif %}>
+                        <input type="checkbox" name="conditioner_on" id="conditionerOnCheckbox" {% if manual_settings.conditioner_on %}checked{% endif %}>
                         Использовать кондиционер
                     </label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
                         <div>
                             <label>Включить в</label>
-                            <input type="time" name="conditioner_start" value="{{ manual_settings.conditioner_start|default:time_limits.preparation_start }}" min="{{ time_limits.preparation_start }}" max="{{ time_limits.lesson_end }}" {% if not capabilities.conditioner %}disabled{% endif %}>
+                            <input type="time" name="conditioner_start" value="{{ manual_settings.conditioner_start|default:time_limits.preparation_start }}" min="{{ time_limits.preparation_start }}" max="{{ time_limits.lesson_end }}">
                         </div>
                         <div>
                             <label>Выключить в</label>
-                            <input type="time" name="conditioner_end" value="{{ manual_settings.conditioner_end|default:time_limits.lesson_start }}" min="{{ time_limits.preparation_start }}" max="{{ time_limits.lesson_end }}" {% if not capabilities.conditioner %}disabled{% endif %}>
+                            <input type="time" name="conditioner_end" value="{{ manual_settings.conditioner_end|default:time_limits.lesson_start }}" min="{{ time_limits.preparation_start }}" max="{{ time_limits.lesson_end }}">
                         </div>
                     </div>
                 </div>
 
-                <div class="field {% if not capabilities.windows %}disabled{% endif %}">
+                <div class="field">
                     <label>Режим работы окон</label>
-                    <select name="window_state" class="manual-required" data-field-label="Окна" {% if not capabilities.windows %}disabled{% endif %}>
+                    <select name="window_state" class="manual-required" data-field-label="Окна" onchange="toggleWindowTimeFields()">
                         <option value="" {% if not manual_settings.window_state %}selected{% endif %}>Не выбрано</option>
                         <option value="open" {% if manual_settings.window_state == "open" %}selected{% endif %}>Открыть для проветривания</option>
                         <option value="close" {% if manual_settings.window_state == "close" %}selected{% endif %}>Держать закрытыми</option>
@@ -127,17 +150,17 @@
                     <div id="windowTimes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; display: none;">
                         <div>
                             <label>Открыть в</label>
-                            <input type="time" name="window_start" value="{{ manual_settings.window_start|default:time_limits.preparation_start }}" min="{{ time_limits.preparation_start }}" max="{{ time_limits.lesson_end }}" {% if not capabilities.windows %}disabled{% endif %}>
+                            <input type="time" name="window_start" value="{{ manual_settings.window_start|default:time_limits.preparation_start }}" min="{{ time_limits.preparation_start }}" max="{{ time_limits.lesson_end }}">
                         </div>
                         <div>
                             <label>Закрыть в</label>
-                            <input type="time" name="window_end" value="{{ manual_settings.window_end|default:time_limits.lesson_start }}" min="{{ time_limits.preparation_start }}" max="{{ time_limits.lesson_end }}" {% if not capabilities.windows %}disabled{% endif %}>
+                            <input type="time" name="window_end" value="{{ manual_settings.window_end|default:time_limits.lesson_start }}" min="{{ time_limits.preparation_start }}" max="{{ time_limits.lesson_end }}">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="actions" style="margin-top: 32px;">
+            <div class="actions">
                 <button type="submit" class="btn">Сохранить настройки</button>
                 <a href="{% url 'university:notifications' %}" class="btn btn-secondary">Отмена</a>
             </div>
@@ -181,8 +204,14 @@
             container.style.display = select.value === "open" ? "grid" : "none";
         }
     }
-    document.querySelector('[name="window_state"]')?.addEventListener("change", toggleWindowTimeFields);
-    toggleWindowTimeFields();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const select = document.querySelector('[name="window_state"]');
+        if (select) {
+            select.addEventListener("change", toggleWindowTimeFields);
+            toggleWindowTimeFields();
+        }
+    });
 
     function toggleLightLevel() {
         const cb = document.getElementById("lightOnCheckbox");
@@ -242,6 +271,6 @@
         if (m.length > 0) { e.preventDefault(); openMissingModal(m); }
     });
 
-    toggleLightLevel();
+    document.addEventListener('DOMContentLoaded', () => toggleLightLevel());
 </script>
 {% endblock %}
