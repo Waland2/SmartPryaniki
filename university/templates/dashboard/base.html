@@ -24,7 +24,7 @@
             --warn: #f59e0b;
             --bad: #e8001d;
             --white: #ffffff;
-            --radius: 5px;
+            --radius: 3px;
             --radius-sm: 12px;
             --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
             --font-display: 'Montserrat', sans-serif;
@@ -213,6 +213,13 @@
         @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
         @media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, 1fr); } .main { padding: 24px 18px 40px; } .header-inner { padding: 0 18px; } }
         @media (max-width: 640px) { .topbar { flex-direction: column; align-items: flex-start; } .grid { grid-template-columns: 1fr 1fr; } .btn { min-width: 0; } }
+        /* Вытягиваем все модальные окна и попапы поверх кнопок */
+        .modal-overlay,
+        .login-popup-overlay,
+        #notification-popup-overlay,
+        #notification-popup {
+            z-index: 99999 !important;
+        }
     </style>
 </head>
 
@@ -237,8 +244,7 @@
                         <a href="/accounts/create/">Создать пользователя</a>
                         <div class="nav-divider"></div>
                         <a href="/admin/">Админка СУБД</a>
-                        <div class="nav-divider"></div>
-                        <a href="/rooms/">Управление кабинетами</a>
+
 
                     {# Логика для ПРЕПОДАВАТЕЛЯ #}
                     {% elif request.user.profile.role == "teacher" %}
