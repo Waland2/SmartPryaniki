@@ -116,6 +116,7 @@ def can_use_postgres(database_config):
     except Exception:
         return False
 
+    print("CAN USE")
     return True
 
 
@@ -161,6 +162,7 @@ USE_TZ = True
 WEATHER_API_KEY = "916a2cf46264c68389fde34a5df728e4"
 WEATHER_LAT = 55.7558
 WEATHER_LON = 37.6173
+INSTALL_POSTGRES_ARCHIVE_JOB = os.getenv('INSTALL_POSTGRES_ARCHIVE_JOB', 'true').lower() == 'true'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
