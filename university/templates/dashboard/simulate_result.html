@@ -10,37 +10,55 @@
 </div>
 
 <div class="card" style="margin-top: 20px;">
-    <table>
-        <thead>
-            <tr>
-                <th>Датчик</th>
-                <th>Тип</th>
-                <th>Значение</th>
-                <th>Результат</th>
-                <th>Сообщение</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in results %}
+    <div class="controls-bar">
+        <div class="search-wrap">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" class="table-search-input" data-target="simTable" list="dates-simTable" placeholder="Поиск по датчику или результату…" autocomplete="off">
+            <datalist id="dates-simTable"></datalist>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Результат</span>
+            <button type="button" class="filter-btn active" data-target="simTable" data-val="all">Все</button>
+            <button type="button" class="filter-btn" data-target="simTable" data-val="Сохранено">Сохранено</button>
+            <button type="button" class="filter-btn" data-target="simTable" data-val="Не сохранено">С ошибкой</button>
+        </div>
+        <span class="results-count">{{ results|length }} записей</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table id="simTable">
+            <thead>
                 <tr>
-                    <td>{{ item.sensor.name }}</td>
-                    <td>{{ item.sensor.sensor_type.name }}</td>
-                    <td>{{ item.value|default:"—" }}</td>
-                    <td>
-                        {% if item.saved %}
-                            <span class="status-active">Сохранено</span>
-                        {% else %}
-                            <span class="status-disabled">Не сохранено</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ item.message }}</td>
+                    <th>Датчик</th>
+                    <th>Тип</th>
+                    <th>Значение</th>
+                    <th>Результат</th>
+                    <th>Сообщение</th>
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="5">Нет результатов.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for item in results %}
+                    <tr>
+                        <td>{{ item.sensor.name }}</td>
+                        <td>{{ item.sensor.sensor_type.name }}</td>
+                        <td>{{ item.value|default:"—" }}</td>
+                        <td>
+                            {% if item.saved %}
+                                <span class="status-active">Сохранено</span>
+                            {% else %}
+                                <span class="status-disabled">Не сохранено</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.message }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">Нет результатов.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

@@ -2,282 +2,83 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Вход</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вход — Умные Пряники</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-
-/* Единый стиль как в base.html */
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap");
-
-:root {
-    --bg: #3a3a3a;
-    --sidebar: #2b2b2b;
-    --card: #3b3b3b;
-    --card-2: #252b3a;
-    --text: #f0f0f0;
-    --muted: #bdbdbd;
-    --accent: #6d86e3;
-    --accent-hover: #7f98ec;
-    --ok: #94f0b9;
-    --warn: #f2c94c;
-    --bad: #e27992;
-    --border: #494949;
-    --search: #313131;
-    --radius-small: 9px;
-    --radius: 19px;
-}
-
-*, *::before, *::after {
-    box-sizing: border-box;
-    font-family: Montserrat, sans-serif;
-    line-height: 130%;
-    -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
-}
-
-html, body {
-    min-height: 100%;
-    background: var(--bg) !important;
-    color: var(--text) !important;
-}
-
-a { color: inherit; }
-
-
-        * {
-            box-sizing: border-box;
+        :root {
+            --bg: #090909;
+            --surface: #000000;
+            --border: rgba(255,255,255,0.07);
+            --border-bright: rgba(255,255,255,0.14);
+            --text: #f0f0f0;
+            --muted: #666;
+            --accent: #e8001d;
+            --accent-dim: rgba(232,0,29,0.12);
+            --accent-glow: rgba(232,0,29,0.35);
+            --radius-sm: 12px;
+            --transition: 0.22s ease;
         }
+
+        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-        }
-
-        .page {
             min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 30px;
         }
 
-        .card {
+        /* Звезды и амбиент */
+        #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        body::before { content: ""; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E"); opacity: 0.022; pointer-events: none; z-index: 9999; }
+        body::after { content: ""; position: fixed; top: -200px; left: -200px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(232,0,29,0.08) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+
+        .star { position: absolute; width: 2px; height: 2px; background: white; border-radius: 50%; opacity: 0; animation: flyStar linear infinite; filter: drop-shadow(0 0 4px rgba(255,255,255,0.8)); }
+        @keyframes flyStar {
+            0% { transform: translateY(100vh) translateX(calc(var(--drift) * 1px)) scale(0); opacity: 0; }
+            10% { opacity: 1; transform: translateY(90vh) translateX(calc(var(--drift) * 0.9px)) scale(1); }
+            90% { opacity: 1; }
+            100% { transform: translateY(-20vh) translateX(calc(var(--drift) * 0.1px)) scale(0.3); opacity: 0; }
+        }
+
+        .login-card {
+            position: relative;
+            z-index: 10;
             width: 100%;
             max-width: 420px;
-            background: white;
-            border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            padding: 28px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            text-align: center;
         }
 
-        h1 {
-            margin: 0 0 20px;
-            font-size: 28px;
-            color: #222;
-        }
+        .brand-logo { width: 64px; height: 64px; object-fit: contain; margin-bottom: 16px; }
+        h1 { margin: 0 0 24px; font-size: 24px; font-weight: 800; letter-spacing: 1px; }
 
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
+        form { display: flex; flex-direction: column; gap: 16px; text-align: left; }
+        label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 14px;
-            font-weight: 600;
-        }
+        input { width: 100%; padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-bright); background: transparent; color: var(--text); font: inherit; font-size: 14px; transition: var(--transition); }
+        input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
 
-        input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #cfd6df;
-            border-radius: 10px;
-            font-size: 15px;
-            outline: none;
-        }
+        .btn { width: 100%; margin-top: 10px; border: none; border-radius: var(--radius-sm); padding: 14px 16px; font-size: 14px; font-weight: 700; background: var(--accent); color: white; cursor: pointer; transition: var(--transition); box-shadow: 0 0 20px var(--accent-glow); }
+        .btn:hover { background: #ff1a33; box-shadow: 0 0 30px var(--accent-glow); transform: translateY(-2px); }
 
-        input:focus {
-            border-color: #3b82f6;
-        }
-
-        .btn {
-            border: none;
-            border-radius: 10px;
-            padding: 13px 16px;
-            font-size: 15px;
-            font-weight: 700;
-            background: #2563eb;
-            color: white;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background: #1d4ed8;
-        }
-
-        .error {
-            margin-bottom: 14px;
-            padding: 12px 14px;
-            border-radius: 10px;
-            background: #fee2e2;
-            color: #991b1b;
-            font-size: 14px;
-        }
-
-
-/* ===== Единый тёмный дизайн как в base.html ===== */
-body {
-    background: var(--bg) !important;
-    color: var(--text) !important;
-    font-family: Montserrat, sans-serif !important;
-}
-
-.page, .container, .simulate-wrap {
-    background: transparent !important;
-}
-
-.header, .topbar, .simulate-card, .day, .filters, .lesson, .empty,
-.card, .hero-card, .metric, .notification-card, .result-box, .info-box,
-.field, .slot-card, .sensor-item, .popup-card, .popup-description,
-.popup-empty, .room-popup, .modal-window, .login-popup-window,
-.notification-popup, #notification-popup {
-    background: var(--card) !important;
-    color: var(--text) !important;
-    border-color: var(--border) !important;
-    box-shadow: none !important;
-}
-
-.header, .popup-header, .modal-window, .room-popup, .login-popup-window,
-#notification-popup, #notification-popup > div {
-    background: var(--sidebar) !important;
-    border-color: #1f1f1f !important;
-}
-
-h1, h2, h3, .brand, .notification-title, .lesson-title, .slot-title,
-.subject, .sensor-name, .info-value, .metric-value, .popup-title,
-.popup-card-value, .result-title, .result-value, strong, b {
-    color: var(--text) !important;
-}
-
-.notes, .muted, .subtitle, .metric-title, .metric-note, .info-title,
-.lesson-meta, .meta, .sensor-type, .notification-message, .popup-card-title,
-.popup-description, .result-label, label, .empty {
-    color: var(--muted) !important;
-}
-
-.nav a, .nav span, .user-trigger {
-    color: var(--text) !important;
-    border-radius: var(--radius-small) !important;
-}
-
-.nav a:hover, .nav .active, .user-trigger:hover, .user-dropdown a:hover {
-    background: #313131 !important;
-    color: var(--accent-hover) !important;
-}
-
-.user-dropdown {
-    background: var(--sidebar) !important;
-    border-color: var(--border) !important;
-}
-
-input, select, textarea {
-    background: var(--search) !important;
-    color: var(--text) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius-small) !important;
-    font-family: Montserrat, sans-serif !important;
-}
-
-input::placeholder, textarea::placeholder {
-    color: var(--muted) !important;
-}
-
-input:focus, select:focus, textarea:focus {
-    outline: 1px solid var(--accent-hover) !important;
-    border-color: var(--accent-hover) !important;
-}
-
-button, .button-link, .btn, .room-link, .popup-btn-main,
-.simulate-btn, input[type="submit"] {
-    background: var(--accent) !important;
-    color: #ffffff !important;
-    border: 1px solid var(--accent-hover) !important;
-    border-radius: 14px !important;
-    box-shadow: none !important;
-    font-weight: 700 !important;
-}
-
-button:hover, .button-link:hover, .btn:hover, .room-link:hover,
-.popup-btn-main:hover, .simulate-btn:hover, input[type="submit"]:hover {
-    background: var(--accent-hover) !important;
-}
-
-.button-muted, .btn-secondary, .popup-btn-muted, .room-text,
-button.button-muted, a.button-muted {
-    background: var(--card-2) !important;
-    border-color: #333a4f !important;
-    color: var(--text) !important;
-}
-
-.chip, .badge, .pill, .badge-blue, .badge-gold, .badge-gray,
-.eyebrow, .room-link, .room-text {
-    background: var(--card-2) !important;
-    border: 1px solid var(--border) !important;
-    color: var(--accent-hover) !important;
-}
-
-.warning, .message, .error {
-    background: rgba(242, 201, 76, 0.12) !important;
-    border: 1px solid rgba(242, 201, 76, 0.45) !important;
-    color: var(--warn) !important;
-}
-
-.notification-card.unread, .lesson-card.active, .slot-card.active,
-.day.today, .field.has-error {
-    background: #313131 !important;
-    border-color: var(--accent-hover) !important;
-}
-
-.lesson-card, .slot-card {
-    background: var(--card) !important;
-    color: var(--text) !important;
-    border-color: var(--border) !important;
-}
-
-.lesson-card:hover, .slot-card:hover, .notification-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent-hover) !important;
-}
-
-.sensor-value, .lesson-time, .topbar-link, .metric-note {
-    color: var(--accent-hover) !important;
-}
-
-.status-ok, .status-active { color: var(--ok) !important; }
-.status-warn, .status-disabled { color: var(--warn) !important; }
-.status-error, .status-bad { color: var(--bad) !important; }
-
-th, td {
-    border-bottom-color: var(--border) !important;
-    color: var(--text) !important;
-}
-th { color: var(--muted) !important; }
-
-.popup-overlay, .modal-overlay, #notification-popup-overlay, .login-popup-overlay {
-    background: rgba(0, 0, 0, 0.55) !important;
-}
-
-@media (max-width: 1000px) {
-    .btn, .button-link, button { width: 100%; }
-}
-
-</style>
+        .error { margin-bottom: 16px; padding: 12px 14px; border-radius: 10px; background: rgba(232, 0, 29, 0.1); border: 1px solid rgba(232, 0, 29, 0.3); color: var(--accent); font-size: 13px; font-weight: 600; text-align: left; }
+    </style>
 </head>
 <body>
-<div class="page">
-    <div class="card">
-        <h1>Вход в систему</h1>
+    <div id="starfield"></div>
+
+    <div class="login-card">
+        <img src="/static/images/logo.png" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+        <h1>УМНЫЕ ПРЯНИКИ</h1>
 
         {% if error %}
             <div class="error">{{ error }}</div>
@@ -285,20 +86,32 @@ th { color: var(--muted) !important; }
 
         <form method="post">
             {% csrf_token %}
-
             <div>
                 <label for="username">Логин</label>
                 <input id="username" name="username" type="text" placeholder="Введите логин" required>
             </div>
-
             <div>
                 <label for="password">Пароль</label>
                 <input id="password" name="password" type="password" placeholder="Введите пароль" required>
             </div>
-
-            <button type="submit" class="btn">Войти</button>
+            <button type="submit" class="btn">Войти в систему</button>
         </form>
     </div>
-</div>
+
+    <script>
+        // Генерация звезд
+        const starfield = document.getElementById('starfield');
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 2 + 1;
+            star.style.width = `${size}px`; star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.animationDelay = `${Math.random() * 15}s`;
+            star.style.animationDuration = `${Math.random() * 20 + 15}s`;
+            star.style.setProperty('--drift', (Math.random() - 0.5) * 120);
+            starfield.appendChild(star);
+        }
+    </script>
 </body>
 </html>

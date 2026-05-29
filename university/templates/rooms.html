@@ -1,382 +1,173 @@
-{% extends "layout.html" %}
-
-{% block title %}Кабинеты{% endblock %}
-
-{% block extra_styles %}
-<style>
-    :root {
-        --bg: #eef2f7;
-        --panel: #ffffff;
-        --line: #dbe3ee;
-        --text: #1f2937;
-        --muted: #64748b;
-        --gold: #4f46e5;
-        --gold-soft: #e9efff;
-        --accent: #4338ca;
-        --shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
-        --radius: 24px;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-        font-family: "Segoe UI", system-ui, sans-serif;
-        background: radial-gradient(circle at top left, #f8fbff 0%, var(--bg) 52%, #e7eef8 100%);
-        color: var(--text);
-    }
-
-    .page {
-        max-width: 1380px;
-        margin: 0 auto;
-        padding: 28px 24px 34px;
-    }
-
-    .hero,
-    .content { display: grid; grid-template-columns: 1.618fr 1fr; gap: 24px; }
-
-    .content { margin-top: 24px; }
-
-    .card {
-        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
-        border: 1px solid rgba(79, 70, 229, 0.12);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        padding: 28px;
-    }
-
-    .hero-card { min-height: 280px; display: flex; flex-direction: column; justify-content: space-between; }
-
-    .eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        align-self: flex-start;
-        padding: 9px 14px;
-        border-radius: 999px;
-        background: var(--gold-soft);
-        color: var(--accent);
-        font-weight: 700;
-    }
-
-    h1, h2 { margin: 0; }
-    h1 { font-size: clamp(38px, 5vw, 58px); line-height: 1.02; }
-    h2 { font-size: 28px; }
-
-    .filters {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr auto;
-        gap: 14px;
-        align-items: end;
-        margin-top: 24px;
-    }
-
-    label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 14px; font-weight: 700; }
-
-    input,
-    select,
-    button {
-        width: 100%;
-        padding: 14px 16px;
-        border-radius: 16px;
-        border: 1px solid var(--line);
-        background: #ffffff;
-        color: var(--text);
-        font: inherit;
-    }
-
-    button {
-        background: linear-gradient(135deg, #4f46e5, #4338ca);
-        color: #fff;
-        border: none;
-        font-weight: 800;
-        cursor: pointer;
-        box-shadow: 0 10px 24px rgba(79, 70, 229, 0.22);
-    }
-
-    .button-link {
-        padding: 14px 18px;
-        border: none;
-        background: linear-gradient(135deg, #4f46e5, #4338ca);
-        color: white;
-        border-radius: 16px;
-        cursor: pointer;
-        transition: 0.2s;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 24px rgba(79, 70, 229, 0.22);
-        font-weight: 800;
-    }
-
-    .button-link:hover {
-        background: linear-gradient(135deg, #4338ca, #3730a3);
-    }
-
-    .chips { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
-
-    .chip {
-        padding: 10px 14px;
-        border-radius: 999px;
-        background: #ffffff;
-        border: 1px solid var(--line);
-        color: var(--accent);
-        font-weight: 600;
-    }
-
-    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-    .metric { min-height: 132px; display: flex; flex-direction: column; justify-content: space-between; }
-    .metric-title { color: var(--muted); font-weight: 700; }
-    .metric-value { font-size: 28px; font-weight: 800; }
-    .metric-note { color: var(--accent); }
-
-    .timeline { display: grid; gap: 14px; margin-top: 18px; }
-    .slot-link { text-decoration: none; color: inherit; }
-
-    .slot-card {
-        border-radius: 22px;
-        border: 1px solid var(--line);
-        background: #ffffff;
-        padding: 20px;
-        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-    }
-
-    .slot-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08); border-color: rgba(79, 70, 229, 0.45); }
-    .slot-card.active { background: linear-gradient(180deg, #eef2ff, #e9efff); border-color: rgba(79, 70, 229, 0.75); }
-    .slot-card.selected { outline: 2px solid rgba(15, 118, 110, 0.42); }
-    .slot-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
-    .slot-title { font-size: 21px; font-weight: 800; }
-    .slot-meta { margin-top: 10px; color: var(--muted); line-height: 1.55; }
-
-    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-    .badge { padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; }
-    .badge-blue { background: #e0e7ff; color: #3730a3; }
-    .badge-gold { background: #ede9fe; color: #5b21b6; }
-    .badge-gray { background: #e5e7eb; color: #374151; }
-
-    .sidebar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
-    .info-box { background: #f8fbff; border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
-    .info-title { color: var(--muted); font-size: 14px; font-weight: 700; }
-    .info-value { margin-top: 10px; font-size: 22px; font-weight: 800; }
-
-    .sensor-list { display: grid; gap: 12px; margin-top: 18px; }
-    .sensor-item { display: flex; justify-content: space-between; gap: 16px; padding: 16px 18px; border-radius: 18px; background: #f8fbff; border: 1px solid var(--line); }
-    .sensor-name { font-weight: 800; }
-    .sensor-type { margin-top: 6px; color: var(--muted); font-size: 14px; }
-    .sensor-value { align-self: center; font-weight: 800; color: var(--accent); }
-
-    .warning { margin-top: 18px; padding: 14px 16px; border-radius: 16px; background: #eff6ff; border: 1px solid rgba(59, 130, 246, 0.35); color: #1d4ed8; }
-    .notes { margin-top: 14px; color: var(--muted); line-height: 1.6; }
-
-    @media (max-width: 1100px) {
-        .hero, .content, .filters { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 640px) {
-        .page { padding-left: 16px; padding-right: 16px; }
-        .metrics, .sidebar-grid { grid-template-columns: 1fr; }
-    }
-</style>
-{% endblock %}
+{% extends "dashboard/base.html" %}
 
 {% block content %}
-<div class="page">
-    <section class="hero">
-        <div class="card hero-card">
-            <div>
-                <div class="eyebrow">Кабинеты</div>
-                <h1>Кабинеты</h1>
-            </div>
+<style>
+    .timeline { display: grid; gap: 14px; margin-top: 18px; }
+    .slot-card { border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); padding: 20px; transition: var(--transition); cursor: pointer; display: block; }
+    .slot-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .slot-card.active { border-color: var(--accent); background: var(--surface-2); }
+    .slot-card.selected { box-shadow: 0 0 0 2px var(--ok); }
 
-            <div>
-                <form method="get" class="filters">
-                    <div>
-                        <label>Дата</label>
-                        <input type="date" name="date" value="{{ selected_date }}">
-                    </div>
-                    <div>
-                        <label>Кабинет</label>
-                        <input type="text" name="room" placeholder="Например: 1315 или Пр1315" value="{{ selected_room }}" list="rooms-list">
-                        <datalist id="rooms-list">
-                            {% for room_name in available_rooms %}
-                                <option value="{{ room_name }}"></option>
-                            {% endfor %}
-                        </datalist>
-                    </div>
-                    <div>
-                        <label>Номер пары</label>
-                        <select name="pair">
-                            <option value="">Выберите пару</option>
-                            {% for pair_number, pair_time in pair_times.items %}
-                                <option value="{{ pair_number }}" {% if pair_number == selected_pair %}selected{% endif %}>
-                                    {{ pair_number }} пара · {{ pair_time }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <button type="submit">Показать кабинет</button>
-                    </div>
-                </form>
+    .slot-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .slot-title { font-size: 18px; font-weight: 800; color: var(--white); }
+    .slot-meta { color: var(--muted-2); font-size: 13px; margin-bottom: 4px; }
 
-                <div class="chips">
-                    <div class="chip">День: {{ selected_day_label }}</div>
-                    <div class="chip">Кабинет: {{ selected_room|default:"—" }}</div>
-                    <div class="chip">Выбрана пара: {{ selected_pair_number|default:"—" }}</div>
-                </div>
+    .sensor-list { display: grid; gap: 12px; }
+    .sensor-item { display: flex; justify-content: space-between; align-items: center; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .sensor-name { font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .sensor-type { font-size: 12px; color: var(--muted); }
+    .sensor-value { font-family: var(--font-mono); font-size: 18px; font-weight: 800; color: var(--accent); }
+</style>
 
-                <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
-                    <a class="button-link" href="?date={{ selected_date }}&pair={{ selected_pair|urlencode }}&show_free_rooms=1">
-                        Свободные кабинеты
-                    </a>
-                </div>
+<div class="card">
+    <h2 style="margin-bottom: 20px;">Управление кабинетами</h2>
 
-                {% if warning %}
-                    <div class="warning">{{ warning }}</div>
-                {% endif %}
-            </div>
+    <form method="get" class="controls-bar" style="border: none; padding: 0; background: transparent;">
+        <div style="flex: 1; min-width: 150px;">
+            <label style="margin-bottom: 6px;">Дата</label>
+            <input type="date" name="date" value="{{ selected_date }}">
         </div>
-
-        <div class="metrics">
-            <div class="card metric">
-                <div class="metric-title">Температура</div>
-                <div class="metric-value">{% if room_info.temperature is not None %}{{ room_info.temperature|floatformat:1 }} °C{% else %}—{% endif %}</div>
-                <div class="metric-note">По данным кабинета</div>
-            </div>
-            <div class="card metric">
-                <div class="metric-title">Кондиционер</div>
-                <div class="metric-value">{% if room_info.conditioner_on %}Включен{% elif room_info.conditioner_on is None %}—{% else %}Выключен{% endif %}</div>
-                <div class="metric-note">Установлено: {{ room_info.conditioners_count }}</div>
-            </div>
-            <div class="card metric">
-                <div class="metric-title">Свет</div>
-                <div class="metric-value">{% if room_info.light_on %}Включен{% elif room_info.light_on is None %}—{% else %}Выключен{% endif %}</div>
-                <div class="metric-note">Освещение аудитории</div>
-            </div>
-            <div class="card metric">
-                <div class="metric-title">Всего датчиков</div>
-                <div class="metric-value">{{ room_info.sensors_count }}</div>
-                <div class="metric-note">Подключено к кабинету</div>
-            </div>
+        <div style="flex: 1; min-width: 200px;">
+            <label style="margin-bottom: 6px;">Номер кабинета</label>
+            <input type="text" name="room" placeholder="Например: 1315" value="{{ selected_room }}" list="rooms-list">
+            <datalist id="rooms-list">
+                {% for room_name in available_rooms %}<option value="{{ room_name }}"></option>{% endfor %}
+            </datalist>
         </div>
-    </section>
+        <div style="flex: 1; min-width: 200px;">
+            <label style="margin-bottom: 6px;">Номер пары</label>
+            <select name="pair">
+                <option value="">Выберите пару</option>
+                {% for pair_number, pair_time in pair_times.items %}
+                    <option value="{{ pair_number }}" {% if pair_number == selected_pair %}selected{% endif %}>
+                        {{ pair_number }} пара · {{ pair_time }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+            <button type="submit" class="btn" style="height: 44px; margin-bottom: 2px;">Показать кабинет</button>
+        </div>
+    </form>
 
-    <section class="content">
+    <div class="room-meta">
+        <div class="pill">День: {{ selected_day_label }}</div>
+        <div class="pill">Кабинет: {{ selected_room|default:"—" }}</div>
+        <div class="pill">Пара: {{ selected_pair_number|default:"—" }}</div>
+    </div>
+
+    <div class="actions">
+        <a class="btn btn-secondary" href="?date={{ selected_date }}&pair={{ selected_pair|urlencode }}&show_free_rooms=1">Показать свободные кабинеты</a>
+    </div>
+
+    {% if warning %}
+        <p style="color: var(--warn); margin-top: 16px;">⚠ {{ warning }}</p>
+    {% endif %}
+</div>
+
+<div class="grid">
+    <div class="card" style="padding: 20px;">
+        <div class="metric-title" style="margin-bottom: 12px; color: var(--muted); text-transform: uppercase; font-size: 10px;">Температура</div>
+        <div class="stat-num" style="font-size: 32px;">{% if room_info.temperature is not None %}{{ room_info.temperature|floatformat:1 }} °C{% else %}—{% endif %}</div>
+    </div>
+    <div class="card" style="padding: 20px;">
+        <div class="metric-title" style="margin-bottom: 12px; color: var(--muted); text-transform: uppercase; font-size: 10px;">Кондиционер</div>
+        <div class="stat-num" style="font-size: 32px; color: var(--accent);">{% if room_info.conditioner_on %}ВКЛ{% elif room_info.conditioner_on is None %}—{% else %}ВЫКЛ{% endif %}</div>
+    </div>
+    <div class="card" style="padding: 20px;">
+        <div class="metric-title" style="margin-bottom: 12px; color: var(--muted); text-transform: uppercase; font-size: 10px;">Свет</div>
+        <div class="stat-num" style="font-size: 32px; color: var(--ok);">{% if room_info.light_on %}ВКЛ{% elif room_info.light_on is None %}—{% else %}ВЫКЛ{% endif %}</div>
+    </div>
+    <div class="card" style="padding: 20px;">
+        <div class="metric-title" style="margin-bottom: 12px; color: var(--muted); text-transform: uppercase; font-size: 10px;">Датчиков</div>
+        <div class="stat-num" style="font-size: 32px;">{{ room_info.sensors_count }}</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div>
         <div class="card">
             {% if show_free_rooms and selected_pair %}
-                <h2>Свободные кабинеты</h2>
-                <div class="notes">Выберите кабинет из списка слева — его данные сразу отобразятся справа.</div>
-
+                <h2 style="margin-bottom: 16px;">Свободные кабинеты</h2>
                 <div class="timeline">
                     {% for room_name in free_rooms %}
-                        <a class="slot-link" href="?date={{ selected_date }}&pair={{ selected_pair }}&room={{ room_name|urlencode }}&show_free_rooms=1">
-                            <div class="slot-card{% if room_name == selected_room %} selected{% endif %}">
-                                <div class="slot-head">
-                                    <div class="slot-title">{{ room_name }}</div>
-                                    <div>Свободен</div>
-                                </div>
-                                <div class="slot-meta">Кабинет свободен на {{ selected_pair }} паре.</div>
-                                <div class="badges">
-                                    {% if room_name == selected_room %}
-                                        <span class="badge badge-blue">Данные открыты справа</span>
-                                    {% else %}
-                                        <span class="badge badge-gray">Показать данные</span>
-                                    {% endif %}
-                                </div>
+                        <a class="slot-card {% if room_name == selected_room %}selected{% endif %}" href="?date={{ selected_date }}&pair={{ selected_pair }}&room={{ room_name|urlencode }}&show_free_rooms=1">
+                            <div class="slot-head">
+                                <div class="slot-title">{{ room_name }}</div>
+                                <div class="pill" style="border-color: var(--ok); color: var(--ok);">Свободен</div>
                             </div>
+                            <div class="slot-meta">Нажмите, чтобы открыть данные справа</div>
                         </a>
                     {% empty %}
-                        <div class="warning">Свободные кабинеты не найдены.</div>
+                        <p class="muted">Свободные кабинеты не найдены.</p>
                     {% endfor %}
                 </div>
             {% else %}
-                <h2>Занятость кабинета в течение дня</h2>
-
+                <h2 style="margin-bottom: 16px;">Занятость в течение дня</h2>
                 <div class="timeline">
                     {% for slot in room_timeline %}
-                        <a class="slot-link" href="?date={{ selected_date }}&room={{ selected_room|urlencode }}&pair={{ slot.pair_number }}">
-                            <div class="slot-card{% if slot.is_active %} active{% endif %}{% if slot.is_selected %} selected{% endif %}">
-                                <div class="slot-head">
-                                    <div class="slot-title">{{ slot.pair_number }} пара — {{ slot.time }}</div>
-                                    <div>{% if slot.is_busy %}Занят{% else %}Свободен{% endif %}</div>
-                                </div>
-                                <div class="slot-meta">{% if slot.is_busy %}{{ slot.subject }}{% else %}В это время выбранный кабинет свободен{% endif %}</div>
-                                <div class="slot-meta">Преподаватель: {{ slot.teacher }}{% if slot.group and slot.group != "—" %} · Группа: {{ slot.group }}{% endif %}</div>
-                                <div class="badges">
-                                    {% if slot.is_active %}<span class="badge badge-gold">Текущая пара сегодня</span>{% endif %}
-                                    {% if slot.is_selected %}<span class="badge badge-blue">Выбрана для просмотра</span>{% else %}<span class="badge badge-gray">Открыть данные этой пары</span>{% endif %}
-                                </div>
+                        <a class="slot-card {% if slot.is_active %}active{% endif %} {% if slot.is_selected %}selected{% endif %}" href="?date={{ selected_date }}&room={{ selected_room|urlencode }}&pair={{ slot.pair_number }}">
+                            <div class="slot-head">
+                                <div class="slot-title">{{ slot.pair_number }} пара ({{ slot.time }})</div>
+                                {% if slot.is_busy %}
+                                    <div class="pill" style="border-color: var(--bad); color: var(--bad);">Занят</div>
+                                {% else %}
+                                    <div class="pill" style="border-color: var(--ok); color: var(--ok);">Свободен</div>
+                                {% endif %}
                             </div>
+                            <div class="slot-meta">{% if slot.is_busy %}{{ slot.subject }}{% else %}В это время кабинет свободен{% endif %}</div>
+                            {% if slot.is_busy %}<div class="slot-meta">👨‍🏫 {{ slot.teacher }} | 👥 {{ slot.group }}</div>{% endif %}
                         </a>
                     {% endfor %}
                 </div>
             {% endif %}
         </div>
+    </div>
 
-        <div class="card">
-            <h2>Данные кабинета</h2>
-
-            <div class="sidebar-grid">
-                <div class="info-box">
-                    <div class="info-title">Кабинет</div>
-                    <div class="info-value">{{ room_info.room|default:selected_room|default:"—" }}</div>
+    <div>
+        <div class="card" style="margin-bottom: 24px;">
+            <h2 style="margin-bottom: 16px;">Информация о кабинете</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="background: var(--surface-2); padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Кто в кабинете</div>
+                    <div style="font-weight: 700;">{{ room_teacher_now|default:"—" }}</div>
                 </div>
-                <div class="info-box">
-                    <div class="info-title">Статус на выбранную пару</div>
-                    <div class="info-value">{{ room_schedule_status }}</div>
+                <div style="background: var(--surface-2); padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Предмет</div>
+                    <div style="font-weight: 700;">{{ room_subject_now|default:"—" }}</div>
                 </div>
-                <div class="info-box">
-                    <div class="info-title">Кто в кабинете</div>
-                    <div class="info-value">{{ room_teacher_now }}</div>
+                <div style="background: var(--surface-2); padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Оснащение</div>
+                    <div style="font-weight: 700;">Стулья: {{ room_info.chairs }} | ПК: {{ room_info.computers }}</div>
                 </div>
-                <div class="info-box">
-                    <div class="info-title">Что идет</div>
-                    <div class="info-value">{{ room_subject_now }}</div>
+                <div style="background: var(--surface-2); padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Этаж</div>
+                    <div style="font-weight: 700;">{{ room_info.floor }}</div>
                 </div>
-                <div class="info-box">
-                    <div class="info-title">Группа</div>
-                    <div class="info-value">{{ room_group_now }}</div>
-                </div>
-                <div class="info-box">
-                    <div class="info-title">Пара / время</div>
-                    <div class="info-value">{{ room_pair_now }} · {{ room_time_now }}</div>
-                </div>
-                <div class="info-box">
-                    <div class="info-title">Этаж</div>
-                    <div class="info-value">{{ room_info.floor }}</div>
-                </div>
-                <div class="info-box">
-                    <div class="info-title">Оснащение</div>
-                    <div class="info-value" style="font-size: 18px;">{{ room_info.chairs }} стульев · {{ room_info.desks }} парт · {{ room_info.computers }} ПК</div>
-                </div>
-            </div>
-
-            {% if room_info.updated_at %}
-                <div class="notes">Последнее обновление датчиков: {{ room_info.updated_at }}</div>
-            {% endif %}
-
-            <div class="sensor-list">
-                {% for sensor in room_info.sensor_cards %}
-                       {% if "co2" not in sensor.name|lower and "co2" not in sensor.type|lower and "освещ" not in sensor.name|lower and "освещ" not in sensor.type|lower %}
-                            <div class="sensor-item">
-                                <div>
-                                    <div class="sensor-name">{{ sensor.name }}</div>
-                                    <div class="sensor-type">{{ sensor.type }} · {{ sensor.status }}</div>
-                                </div>
-                                <div class="sensor-value">{{ sensor.value }}</div>
-                            </div>
-                        {% endif %}    
-                {% empty %}
-                    <div class="sensor-item">
-                        <div>
-                            <div class="sensor-name">{% if selected_room %}Датчики не найдены{% else %}Кабинет не выбран{% endif %}</div>
-                            <div class="sensor-type">{% if selected_room %}Для этого кабинета пока нет данных в локальной базе{% else %}Выберите кабинет или откройте список свободных кабинетов{% endif %}</div>
-                        </div>
-                        <div class="sensor-value">—</div>
-                    </div>
-                {% endfor %}
             </div>
         </div>
-    </section>
+
+        <div class="card">
+            <h2 style="margin-bottom: 16px;">Показания датчиков</h2>
+            <div class="sensor-list">
+                {% for sensor in room_info.sensor_cards %}
+                    {% if "co2" not in sensor.name|lower and "co2" not in sensor.type|lower and "освещ" not in sensor.name|lower and "освещ" not in sensor.type|lower %}
+                        <div class="sensor-item">
+                            <div>
+                                <div class="sensor-name">{{ sensor.name }}</div>
+                                <div class="sensor-type">{{ sensor.type }} · {{ sensor.status }}</div>
+                            </div>
+                            <div class="sensor-value">{{ sensor.value }}</div>
+                        </div>
+                    {% endif %}
+                {% empty %}
+                    <p class="muted">{% if selected_room %}Нет данных датчиков.{% else %}Выберите кабинет для просмотра данных.{% endif %}</p>
+                {% endfor %}
+            </div>
+            {% if room_info.updated_at %}
+                <p class="muted" style="margin-top: 16px; font-size: 12px;">Обновлено: {{ room_info.updated_at }}</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}
