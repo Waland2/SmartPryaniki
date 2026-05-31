@@ -1,6 +1,7 @@
 from datetime import date, time, timedelta
 from unittest.mock import patch
 
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 
@@ -12,6 +13,7 @@ from university.models import (
     RoomLesson,
     Sensor,
     SensorType,
+    Feedback,
 )
 from university.preparation_services import choose_climate_action, prepare_room_for_lesson
 from university.schedule_services import is_time_to_prepare
@@ -176,6 +178,7 @@ class SchedulePageDayFilterTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual([day["key"] for day in response.context["schedule"]], ["wednesday"])
         self.assertEqual(response.context["selected_day"], "wednesday")
+        self.assertContains(response, '<div class="topbar-title">Расписание</div>', html=True)
 
     @patch("university.views.APIClient.get_schedule")
     def test_date_filter_excludes_selected_day_without_matching_date(self, mock_get_schedule):
@@ -320,5 +323,115 @@ class FullPreparationTests(TestCase):
         self.assertEqual(ClimateActionLog.objects.count(), 1)
 
 
-from django.test import TestCase
+class RoleAccessTests(TestCase):
+    def setUp(self):
+        self.room_1 = Room.objects.create(name="101", building=1, floor=1)
+        self.room_2 = Room.objects.create(name="201", building=2, floor=2)
+
+        self.global_admin = User.objects.create_superuser("global", password="password")
+        self.building_admin = User.objects.create_user("building", password="password", is_staff=True)
+        self.building_admin.profile.role = "moderator"
+        self.building_admin.profile.building = 1
+        self.building_admin.profile.save()
+
+    def test_public_feedback_creates_notification(self):
+        response = self.client.post(
+            "/feedback/",
+            {"name": "Гость", "email": "guest@example.com", "message": "Нужна помощь"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Feedback.objects.filter(name="Гость").exists())
+
+    @patch("university.views._get_rooms_catalog")
+    def test_public_rooms_page_is_available(self, mock_get_rooms_catalog):
+        mock_get_rooms_catalog.return_value = {"available_rooms": []}
+
+        response = self.client.get("/rooms/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Панель<span> управления</span>", html=True)
+        self.assertContains(response, '<div class="topbar-title">Кабинеты</div>', html=True)
+
+    def test_public_feedback_page_has_guest_heading(self):
+        response = self.client.get("/feedback/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Панель<span> управления</span>", html=True)
+        self.assertContains(response, '<div class="topbar-title">Обратная связь</div>', html=True)
+
+    def test_global_admin_can_open_feedback_notifications(self):
+        self.client.force_login(self.global_admin)
+
+        response = self.client.get("/dashboard/feedback/")
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_global_admin_can_delete_feedback_notification(self):
+        notification = Feedback.objects.create(name="Guest", message="Delete me")
+        self.client.force_login(self.global_admin)
+
+        response = self.client.post(f"/dashboard/feedback/{notification.pk}/delete/")
+
+        self.assertRedirects(response, "/dashboard/feedback/")
+        self.assertFalse(Feedback.objects.filter(pk=notification.pk).exists())
+
+    def test_building_admin_cannot_delete_feedback_notification(self):
+        notification = Feedback.objects.create(name="Guest", message="Keep me")
+        self.client.force_login(self.building_admin)
+
+        response = self.client.post(f"/dashboard/feedback/{notification.pk}/delete/")
+
+        self.assertRedirects(response, "/dashboard/")
+        self.assertTrue(Feedback.objects.filter(pk=notification.pk).exists())
+
+    def test_feedback_older_than_30_days_is_deleted_when_notifications_opened(self):
+        notification = Feedback.objects.create(name="Guest", message="Expired")
+        Feedback.objects.filter(pk=notification.pk).update(
+            created_at=timezone.now() - timedelta(days=31),
+        )
+        self.client.force_login(self.global_admin)
+
+        response = self.client.get("/dashboard/feedback/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Feedback.objects.filter(pk=notification.pk).exists())
+
+    def test_building_admin_cannot_open_feedback_notifications(self):
+        self.client.force_login(self.building_admin)
+
+        response = self.client.get("/dashboard/feedback/")
+
+        self.assertRedirects(response, "/dashboard/")
+
+    def test_building_admin_sees_only_own_building_on_dashboard(self):
+        self.client.force_login(self.building_admin)
+
+        response = self.client.get("/dashboard/")
+
+        self.assertContains(response, self.room_1.name)
+        self.assertNotContains(response, self.room_2.name)
+
+    def test_building_admin_cannot_open_other_building_room(self):
+        self.client.force_login(self.building_admin)
+
+        response = self.client.get(f"/dashboard/room/{self.room_2.pk}/")
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_building_admin_room_page_has_no_database_edit_links(self):
+        self.client.force_login(self.building_admin)
+
+        response = self.client.get(f"/dashboard/room/{self.room_1.pk}/")
+
+        self.assertNotContains(response, "/admin/university/room/")
+        self.assertNotContains(response, "/admin/university/climateactionlog/")
+
+    def test_django_admin_is_global_only(self):
+        self.client.force_login(self.building_admin)
+
+        response = self.client.get("/admin/")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/admin/login/", response.url)
 

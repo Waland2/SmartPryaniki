@@ -10,7 +10,10 @@ from .models import (
     Conditioner,
     RoomLesson,
     ClimateActionLog,
+    Feedback,
 )
+
+admin.site.has_permission = lambda request: request.user.is_active and request.user.is_superuser
 
 
 class ConditionerInline(admin.TabularInline):
@@ -52,6 +55,7 @@ class ClimateActionLogInline(admin.TabularInline):
 class RoomAdmin(admin.ModelAdmin):
     list_display = (
         "name",
+        "building",
         "floor",
         "chairs",
         "desks",
@@ -63,7 +67,7 @@ class RoomAdmin(admin.ModelAdmin):
     )
 
     search_fields = ("name",)
-    list_filter = ("floor", "window_open")
+    list_filter = ("building", "floor", "window_open")
     change_list_template = "admin/university/room/change_list.html"
 
     inlines = [
@@ -246,6 +250,13 @@ class RoomLessonAdmin(admin.ModelAdmin):
     )
 
     date_hierarchy = "lesson_date"
+
+
+@admin.register(Feedback)
+class FeedbackAdmin(admin.ModelAdmin):
+    list_display = ("name", "email", "created_at", "is_read")
+    list_filter = ("is_read", "created_at")
+    search_fields = ("name", "email", "message")
 
 
 admin.site.site_header = "Умные Пряники"

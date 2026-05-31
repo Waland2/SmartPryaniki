@@ -6,7 +6,13 @@ from .simulators import get_simulator
 
 
 class Room(models.Model):
+    BUILDING_CHOICES = [
+        (1, "1 корпус"),
+        (2, "2 корпус"),
+    ]
+
     name = models.CharField("Название кабинета", max_length=50)
+    building = models.PositiveSmallIntegerField("Корпус", choices=BUILDING_CHOICES, default=1)
     floor = models.IntegerField("Этаж")
 
     chairs = models.IntegerField("Количество стульев", default=0)
@@ -388,3 +394,19 @@ class RoomLesson(models.Model):
 
     def __str__(self):
         return f"{self.room.name} | {self.lesson_date} | {self.start_time}"
+
+
+class Feedback(models.Model):
+    name = models.CharField("Имя", max_length=150)
+    email = models.EmailField("Электронная почта", blank=True)
+    message = models.TextField("Сообщение")
+    is_read = models.BooleanField("Прочитано", default=False)
+    created_at = models.DateTimeField("Создано", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Обращение"
+        verbose_name_plural = "Обращения"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.name}: {self.message[:50]}"

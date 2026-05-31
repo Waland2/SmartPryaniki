@@ -13,6 +13,9 @@ urlpatterns = [
     path("schedule/", views.schedule_view, name="schedule"),
     path("current-day/", views.current_day_view, name="current_day"),
     path("rooms/", views.rooms_view, name="rooms"),
+    path("feedback/", views.feedback_view, name="feedback"),
+    path("dashboard/feedback/", views.feedback_notifications_view, name="feedback_notifications"),
+    path("dashboard/feedback/<int:pk>/delete/", views.feedback_notification_delete, name="feedback_notification_delete"),
 
     path("notifications/", notification_views.notifications_page, name="notifications"),
     path("notifications/<int:pk>/read/", notification_views.mark_notification_read, name="notification_read"),

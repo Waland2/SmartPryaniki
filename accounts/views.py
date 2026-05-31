@@ -58,6 +58,7 @@ def create_user_view(request):
         middle_name = request.POST.get("middle_name", "").strip()
         password = request.POST.get("password", "").strip()
         role = request.POST.get("role", "teacher").strip()
+        building = request.POST.get("building", "").strip()
 
         generate_password = request.POST.get("generate_password") == "on"
 
@@ -68,6 +69,8 @@ def create_user_view(request):
             error = "Заполните имя и фамилию"
         elif not password:
             error = "Введите пароль или включите генерацию случайного пароля"
+        elif role == "moderator" and building not in {"1", "2"}:
+            error = "Выберите корпус для администратора по направлению"
         else:
             user = create_user_with_role(
                 first_name=first_name,
@@ -75,6 +78,7 @@ def create_user_view(request):
                 middle_name=middle_name,
                 password=password,
                 role=role,
+                building=int(building) if building else None,
             )
             success = "Пользователь успешно создан"
             created_username = user.profile.login

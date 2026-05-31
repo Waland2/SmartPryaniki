@@ -154,6 +154,7 @@
         .card::before {
             content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0;
             transition: opacity var(--transition); background: linear-gradient(135deg, rgba(255,255,255,0.025) 0%, transparent 100%);
+            pointer-events: none;
         }
 
         /* КРАСНОЕ СВЕЧЕНИЕ ПРИ НАВЕДЕНИИ */
@@ -244,9 +245,9 @@
                         <a href="/accounts/create/">Создать пользователя</a>
                         <div class="nav-divider"></div>
                         <a href="/admin/">Админка СУБД</a>
+                        <div class="nav-divider"></div>
+                        <a href="{% url 'university:feedback_notifications' %}">Уведомления</a>
 
-
-                    {# Логика для ПРЕПОДАВАТЕЛЯ #}
                     {% elif request.user.profile.role == "teacher" %}
                         <a href="/schedule/" class="{% if request.path == '/schedule/' %}active{% endif %}">Расписание</a>
                         <div class="nav-divider"></div>
@@ -256,10 +257,23 @@
                         <div class="nav-divider"></div>
                         <a href="/notifications/" class="{% if '/notifications/' in request.path %}active{% endif %}">Уведомления</a>
 
+                    {% elif request.user.profile.role == "moderator" %}
+                        <a href="{% url 'university:dashboard_home' %}">Панель корпуса {{ request.user.profile.building }}</a>
+
+                    {% else %}
+                        <a href="/schedule/" class="{% if request.path == '/schedule/' %}active{% endif %}">Расписание</a>
+                        <div class="nav-divider"></div>
+                        <a href="/rooms/" class="{% if request.path == '/rooms/' %}active{% endif %}">Кабинеты</a>
+                        <div class="nav-divider"></div>
+                        <a href="/feedback/" class="{% if request.path == '/feedback/' %}active{% endif %}">Обратная связь</a>
                     {% endif %}
 
                     <div class="nav-divider"></div>
-                    <a href="/accounts/logout/" class="danger">Выйти</a>
+                    {% if request.user.is_authenticated %}
+                        <a href="/accounts/logout/" class="danger">Выйти</a>
+                    {% else %}
+                        <a href="/accounts/login/">Войти</a>
+                    {% endif %}
                 </nav>
             </div>
         </aside>
@@ -267,8 +281,18 @@
         <main class="main">
             <div class="topbar">
                 <div>
-                    <div class="topbar-meta" style="margin-bottom:10px;">Система управления / Кабинеты</div>
-                    <div class="topbar-title">{{ title|default:"Панель<span> управления</span>" }}</div>
+                    <div class="topbar-meta" style="margin-bottom:10px;">
+                        {% if request.user.is_authenticated %}Система управления / Кабинеты{% else %}Информационная система / Кабинеты{% endif %}
+                    </div>
+                    <div class="topbar-title">
+                        {% if title %}
+                            {{ title }}
+                        {% elif request.user.is_authenticated %}
+                            Панель<span> управления</span>
+                        {% else %}
+                            Умные<span> Пряники</span>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <div class="topbar-right">

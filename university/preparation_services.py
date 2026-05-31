@@ -113,6 +113,13 @@ def apply_climate_action(room, decision):
 
 
 def prepare_room_for_lesson(room, lesson, outdoor_weather=None):
+    if ClimateActionLog.objects.filter(
+        room=room,
+        lesson_date=lesson.lesson_date,
+        lesson_time=lesson.start_time,
+    ).exists():
+        return {"status": "skipped"}
+
     room.simulate_sensors()
     snapshot = get_room_climate_snapshot(room)
 

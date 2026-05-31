@@ -59,6 +59,15 @@
                     <option value="moderator">Младший администратор</option>
                 </select>
             </div>
+
+            <div id="building-field" style="display: none;">
+                <label for="building">Корпус</label>
+                <select id="building" name="building">
+                    <option value="">Выберите корпус</option>
+                    <option value="1">1 корпус</option>
+                    <option value="2">2 корпус</option>
+                </select>
+            </div>
         </div>
 
         <div class="actions" style="margin-top: 30px;">
@@ -71,6 +80,8 @@
 <script>
     const passwordInput = document.getElementById("password");
     const generatePasswordCheckbox = document.getElementById("generate-password");
+    const roleInput = document.getElementById("role");
+    const buildingField = document.getElementById("building-field");
 
     if (passwordInput && generatePasswordCheckbox) {
         function togglePasswordField() {
@@ -85,5 +96,11 @@
         generatePasswordCheckbox.addEventListener("change", togglePasswordField);
         togglePasswordField();
     }
+
+    function toggleBuildingField() {
+        buildingField.style.display = roleInput.value === "moderator" ? "block" : "none";
+    }
+    roleInput.addEventListener("change", toggleBuildingField);
+    toggleBuildingField();
 </script>
 {% endblock %}

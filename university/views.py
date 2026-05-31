@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import moderator_or_admin_required
 from accounts.models import UserProfile
-from .models import Room, SensorData, ClimateActionLog
+from .models import Feedback, Room, SensorData, ClimateActionLog
 from .climate_services import get_room_climate_snapshot
 from api_client import APIClient
 
@@ -15,6 +15,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from .models import TeacherNotification, Room, Sensor
 
@@ -760,7 +761,7 @@ def get_room_busy_state(room_value, selected_date, pair_number):
 
 def index_redirect(request):
     if not request.user.is_authenticated:
-        return redirect("/accounts/login/")
+        return redirect("/schedule/")
 
     if request.user.is_superuser:
         return redirect("/dashboard/")
@@ -776,6 +777,9 @@ def index_redirect(request):
 @moderator_or_admin_required
 def dashboard_home(request):
     rooms = Room.objects.prefetch_related("sensor_set__sensor_type", "conditioner_set").all()
+    profile = getattr(request.user, "profile", None)
+    if not request.user.is_superuser:
+        rooms = rooms.filter(building=profile.building)
 
     total_rooms = rooms.count()
     total_sensors = sum(room.sensor_set.count() for room in rooms)
@@ -795,11 +799,15 @@ def dashboard_home(request):
 
 @moderator_or_admin_required
 def room_detail(request, room_id):
+    rooms = Room.objects.prefetch_related(
+        "sensor_set__sensor_type",
+        "conditioner_set",
+    )
+    profile = getattr(request.user, "profile", None)
+    if not request.user.is_superuser:
+        rooms = rooms.filter(building=profile.building)
     room = get_object_or_404(
-        Room.objects.prefetch_related(
-            "sensor_set__sensor_type",
-            "conditioner_set",
-        ),
+        rooms,
         pk=room_id,
     )
 
@@ -843,8 +851,12 @@ def room_detail(request, room_id):
 
 @moderator_or_admin_required
 def room_simulate(request, room_id):
+    rooms = Room.objects.prefetch_related("sensor_set__sensor_type", "conditioner_set")
+    profile = getattr(request.user, "profile", None)
+    if not request.user.is_superuser:
+        rooms = rooms.filter(building=profile.building)
     room = get_object_or_404(
-        Room.objects.prefetch_related("sensor_set__sensor_type", "conditioner_set"),
+        rooms,
         pk=room_id,
     )
 
@@ -863,7 +875,11 @@ def room_simulate(request, room_id):
 
 @moderator_or_admin_required
 def room_history(request, room_id):
-    room = get_object_or_404(Room, pk=room_id)
+    rooms = Room.objects.all()
+    profile = getattr(request.user, "profile", None)
+    if not request.user.is_superuser:
+        rooms = rooms.filter(building=profile.building)
+    room = get_object_or_404(rooms, pk=room_id)
     history = (
         SensorData.objects.filter(sensor__room=room)
         .select_related("sensor", "sensor__sensor_type")
@@ -1035,6 +1051,7 @@ def schedule_view(request):
     room_popup_data = build_room_popup_map(schedule) if schedule else {}
 
     return render(request, "schedule.html", {
+        "title": "Расписание",
         "schedule": prepared_schedule,
         "group": group,
         "teacher": teacher,
@@ -1129,6 +1146,7 @@ def current_day_view(request):
         current_pair_message = ""
 
     context = {
+        "title": "Текущий день",
         "selected_date": selected_date_str,
         "selected_pair": str(selected_pair),
         "selected_room": selected_room,
@@ -1190,7 +1208,6 @@ def build_room_timeline(selected_room, selected_date):
     return timeline
 
 
-@teacher_required
 def rooms_view(request):
     selected_date_str = request.GET.get("date") or datetime.date.today().strftime("%Y-%m-%d")
     selected_pair = (request.GET.get("pair") or "").strip()
@@ -1296,6 +1313,7 @@ def rooms_view(request):
         warning = "Чтобы показать свободные кабинеты, выберите номер пары."
 
     context = {
+        "title": "Кабинеты",
         "selected_date": selected_date_str,
         "selected_pair": str(selected_pair),
         "selected_pair_number": str(selected_pair) if selected_pair else "",
@@ -1316,3 +1334,47 @@ def rooms_view(request):
         "pair_times": PAIR_TIMES,
     }
     return render(request, "rooms.html", context)
+
+
+def delete_expired_feedback():
+    cutoff = timezone.now() - datetime.timedelta(days=30)
+    Feedback.objects.filter(created_at__lt=cutoff).delete()
+
+
+def feedback_view(request):
+    delete_expired_feedback()
+    success = ""
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        email = request.POST.get("email", "").strip()
+        message = request.POST.get("message", "").strip()
+        if name and message:
+            Feedback.objects.create(name=name, email=email, message=message)
+            success = "Спасибо! Обращение отправлено администратору."
+
+    return render(request, "feedback.html", {"success": success, "title": "Обратная связь"})
+
+
+@moderator_or_admin_required
+def feedback_notifications_view(request):
+    if not request.user.is_superuser:
+        return redirect("/dashboard/")
+
+    delete_expired_feedback()
+    notifications = Feedback.objects.all()
+    return render(
+        request,
+        "dashboard/feedback_notifications.html",
+        {"notifications": notifications, "title": "Уведомления"},
+    )
+
+
+@moderator_or_admin_required
+@require_POST
+def feedback_notification_delete(request, pk):
+    if not request.user.is_superuser:
+        return redirect("/dashboard/")
+
+    notification = get_object_or_404(Feedback, pk=pk)
+    notification.delete()
+    return redirect("university:feedback_notifications")

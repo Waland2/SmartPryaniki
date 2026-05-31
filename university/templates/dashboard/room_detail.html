@@ -15,8 +15,10 @@
     <div class="actions">
         <a class="btn" href="{% url 'university:room_simulate' room.id %}">Запустить симуляцию</a>
         <a class="btn btn-secondary" href="{% url 'university:room_history' room.id %}">История показаний</a>
-        <a class="btn btn-secondary" href="/admin/university/climateactionlog/?room__id__exact={{ room.id }}">История настройки кабинета</a>
-        <a class="btn btn-secondary" href="/admin/university/room/{{ room.id }}/change/">Редактировать кабинет</a>
+        {% if request.user.is_superuser %}
+            <a class="btn btn-secondary" href="/admin/university/climateactionlog/?room__id__exact={{ room.id }}">История настройки кабинета</a>
+            <a class="btn btn-secondary" href="/admin/university/room/{{ room.id }}/change/">Редактировать кабинет</a>
+        {% endif %}
     </div>
 </div>
 
@@ -65,9 +67,11 @@
         <div class="status-disabled" style="margin-top: 12px;">Автоматическая настройка этого кабинета ещё не выполнялась.</div>
     {% endif %}
 
-    <div class="actions">
-        <a class="btn btn-secondary" href="/admin/university/climateactionlog/?room__id__exact={{ room.id }}">Открыть всю историю настройки</a>
-    </div>
+    {% if request.user.is_superuser %}
+        <div class="actions">
+            <a class="btn btn-secondary" href="/admin/university/climateactionlog/?room__id__exact={{ room.id }}">Открыть всю историю настройки</a>
+        </div>
+    {% endif %}
 </div>
 
 <div class="card" style="margin-top: 20px;">
@@ -201,7 +205,7 @@
                         </td>
                         <td>{{ sensor.last_value|default:"—" }}</td>
                         <td>{{ sensor.last_updated|date:"d.m.Y H:i" }}</td>
-                        <td><a href="/admin/university/sensor/{{ sensor.id }}/change/" style="color:var(--accent);">Изменить</a></td>
+                        <td>{% if request.user.is_superuser %}<a href="/admin/university/sensor/{{ sensor.id }}/change/" style="color:var(--accent);">Изменить</a>{% endif %}</td>
                     </tr>
                 {% empty %}
                     <tr><td colspan="6">У этого кабинета пока нет датчиков.</td></tr>

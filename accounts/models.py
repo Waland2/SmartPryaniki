@@ -3,6 +3,11 @@ from django.db import models
 
 
 class UserProfile(models.Model):
+    BUILDING_CHOICES = [
+        (1, "1 корпус"),
+        (2, "2 корпус"),
+    ]
+
     ROLE_CHOICES = [
         ("teacher", "Преподаватель"),
         ("moderator", "Младший администратор"),
@@ -21,6 +26,13 @@ class UserProfile(models.Model):
         max_length=50,
         choices=ROLE_CHOICES,
         default="teacher",
+    )
+    building = models.PositiveSmallIntegerField(
+        "Корпус",
+        choices=BUILDING_CHOICES,
+        null=True,
+        blank=True,
+        help_text="Область ответственности администратора по направлению.",
     )
 
     def __str__(self):

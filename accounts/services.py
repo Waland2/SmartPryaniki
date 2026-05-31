@@ -5,7 +5,14 @@ from django.contrib.auth.models import User
 from .utils import build_username
 
 
-def create_user_with_role(first_name, last_name, middle_name, password, role="teacher"):
+def create_user_with_role(
+    first_name,
+    last_name,
+    middle_name,
+    password,
+    role="teacher",
+    building=None,
+):
     fio_login = build_username(
         last_name=last_name,
         first_name=first_name,
@@ -29,6 +36,7 @@ def create_user_with_role(first_name, last_name, middle_name, password, role="te
     user.profile.middle_name = middle_name
     user.profile.login = fio_login
     user.profile.role = role
+    user.profile.building = building if role == "moderator" else None
     user.profile.save()
 
     return user
